@@ -37,6 +37,11 @@ jobs:
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
+      - name: Install rcmdcheck
+        run: |
+          install.packages('rcmdcheck')
+        shell: Rscript {0}
+
       - name: Run R CMD check
         run: |
           options(crayon.enabled = TRUE)
