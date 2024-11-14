@@ -2,6 +2,8 @@
 
 export(CMIDinfo)
 export(allDatasets)
+export(createLinkfile)
 export(datasetInfo)
+export(joinDatasets)
 export(searchDatabase)
 export(translate)

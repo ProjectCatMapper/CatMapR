@@ -39,7 +39,7 @@ searchDatabase(
 dataframe
 }
 \description{
-Search for a term in a database and retrieve the CMID (CatMapperID) and CMName (CatMapper Name).
+Search for a term in a database and retrieve the CMID (CatMapperID), CMName (CatMapper Name), and other information about the matches.
 }
 \examples{
 searchDatabase(database = "SocioMap",domain = "ETHNICITY", term = "Dan",property = "Name", yearStart = NULL, yearEnd = NULL, context = NULL, limit = 1000)

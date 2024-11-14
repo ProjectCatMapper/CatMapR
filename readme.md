@@ -1,12 +1,13 @@
 
 # CatMapR
 
-**CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to datasets, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research. 
+**CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to datasets, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research.
 
 This package allows users to:
 - Retrieve datasets and associated metadata from CatMapper databases.
 - Search for specific categories or entities and obtain detailed information.
 - Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
+- Create and join datasets across different domains for integrated analysis.
 
 ## Installation
 
@@ -25,8 +26,11 @@ remotes::install_github("projectCatMapper/CatMapR")
 The **CatMapR** package includes the following main functions:
 
 - **`allDatasets`**: Retrieves all datasets from a specified database (`SocioMap` or `ArchaMap`).
+- **`callAPI`**: Helper function for calling the CatMapper API with specified parameters.
 - **`CMIDinfo`**: Fetches details about a specific entity by CatMapper ID (CMID).
+- **`createLinkfile`**: Proposes and returns a merge of datasets based on a category domain and specified datasets.
 - **`datasetInfo`**: Retrieves information about a dataset based on a given CMID, with optional filtering by domain.
+- **`joinDatasets`**: Joins two datasets based on specified parameters, returning the joined data with translated keys.
 - **`searchDatabase`**: Searches for terms within a database, allowing filtering by domain, property, year, and context.
 - **`translate`**: Translates terms within datasets by matching specified properties and domains, facilitating category consistency across data sources.
 
@@ -50,12 +54,26 @@ cmid_info <- CMIDinfo(database = "SocioMap", cmid = "SM1")
 print(cmid_info)
 ```
 
-### Retrieve Dataset Information by CMID with Domain Filtering
+### Create Linkfile for Dataset Merges
 
 ```r
-# Retrieve dataset information for CMID "SD1" in SocioMap, filtering by the "CATEGORY" domain
-dataset_details <- datasetInfo(database = "SocioMap", cmid = "SD1", domain = "CATEGORY")
-print(dataset_details)
+# Create a linkfile to merge datasets based on the ETHNICITY domain
+merged_data <- createLinkfile(
+  categoryLabel = c("ETHNICITY"),
+  datasetChoices = c("SD5", "SD6"),
+  database = "SocioMap"
+)
+print(merged_data)
+```
+
+### Join Datasets by Key
+
+```r
+# Join two datasets by matching keys in the SocioMap database
+autoLeft <- data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
+autoRight <- data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
+joined_data <- joinDatasets(database = "SocioMap", autoLeft = autoLeft, autoRight = autoRight)
+print(joined_data)
 ```
 
 ### Search the Database
