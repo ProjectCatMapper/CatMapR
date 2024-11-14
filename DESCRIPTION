@@ -10,6 +10,7 @@ Description: CatMapper organizes dynamic and complex category systems commonly u
     SocioMap organizes the thousands of sociopolitical categories—e.g., ethnicities, languages, religions, districts, and political parties—frequently used by social scientists and policymakers. Users can search for basic contextual information on each category—geographical location, population size, alternative names, and language—as well as the datasets containing specific social, demographic, cultural and economic data for each category. In the future, SocioMap will also provide tools for facilitating and sharing merges of diverse and heterogenous external datasets by these category systems to enable novel analyses.
     ArchaMap will organize artifact types—e.g., ceramics, lithics—frequently used by archaeologists in analyses of material culture. ArchaMap will share SocioMap’s functionalities for merging data from multiple sources by diverse category systems.
 License: GPL
+Logo: man/figures/logo.png
 Encoding: UTF-8
 LazyData: true
 Suggests: roxygen2
