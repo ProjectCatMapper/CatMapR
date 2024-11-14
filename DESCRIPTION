@@ -1,0 +1,21 @@
+Package: CatMapR
+Type: Package
+Title: This package interfaces with the CatMapper application API (catmapper.org).
+Version: 0.1.0
+Author: Robert J. Bischoff
+Maintainer: Robert J. Bischoff <bischrob@gmail.com>
+Description: CatMapper organizes dynamic and complex category systems commonly used by scientists and policymakers, including ethnicities, languages, religions, political districts, political parties, and technologies. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets.
+    CatMapper assists users in (1) exploring key contextual information about categories of interest (e.g., Aymara ethnicity, Balochi language, Rajshahi district), (2) identifying which of thousands of datasets contain information about specific categories, and (3) reconciling distinct and incompatible encodings for the same category across diverse datasets to enable novel analyses.
+    CatMapper currently houses two apps—SocioMap and ArchaMap.
+    SocioMap organizes the thousands of sociopolitical categories—e.g., ethnicities, languages, religions, districts, and political parties—frequently used by social scientists and policymakers. Users can search for basic contextual information on each category—geographical location, population size, alternative names, and language—as well as the datasets containing specific social, demographic, cultural and economic data for each category. In the future, SocioMap will also provide tools for facilitating and sharing merges of diverse and heterogenous external datasets by these category systems to enable novel analyses.
+    ArchaMap will organize artifact types—e.g., ceramics, lithics—frequently used by archaeologists in analyses of material culture. ArchaMap will share SocioMap’s functionalities for merging data from multiple sources by diverse category systems.
+License: GNU GPL
+Encoding: UTF-8
+LazyData: true
+Suggests: roxygen2
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Depends: httr,
+    jsonlite,
+    tictoc,
+    xml2
