@@ -70,9 +70,9 @@ print(merged_data)
 
 ```r
 # Join two datasets by matching keys in the SocioMap database
-autoLeft <- data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
-autoRight <- data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
-joined_data <- joinDatasets(database = "SocioMap", autoLeft = autoLeft, autoRight = autoRight)
+joinLeft <- data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
+joinRight <- data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
+joined_data <- joinDatasets(database = "SocioMap", joinLeft = joinLeft, joinRight = joinRight)
 print(joined_data)
 ```
 
