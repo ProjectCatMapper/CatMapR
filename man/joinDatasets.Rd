@@ -4,14 +4,14 @@
 \alias{joinDatasets}
 \title{Join Datasets by Key}
 \usage{
-joinDatasets(database, autoLeft, autoRight)
+joinDatasets(database, joinLeft, joinRight)
 }
 \arguments{
 \item{database}{A string specifying the database to use, either "SocioMap" or "ArchaMap".}
 
-\item{autoLeft}{A data frame representing the left dataset with a "datasetID" column and other relevant columns.}
+\item{joinLeft}{A data frame representing the left dataset with a "datasetID" column and other relevant columns.}
 
-\item{autoRight}{A data frame representing the right dataset with a "datasetID" column and other relevant columns.}
+\item{joinRight}{A data frame representing the right dataset with a "datasetID" column and other relevant columns.}
 }
 \value{
 A data frame containing the joined datasets or an error message if the request fails.
@@ -22,7 +22,7 @@ It retrieves translated keys from the database and returns the joined data with 
 The function requires a column named 'datasetID' in both datasets that has the CMID of the translated dataset. It also requires the columns used to create the 'Key' used in translation. For example, if the Key for the GADM dataset 'SD1' is 'GID: AFG', then the 'Key' column should be 'GID' in the dataset.
 }
 \examples{
-autoLeft = data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
-autoRight = data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
-joinDatasets("SocioMap", autoLeft, autoRight)
+joinLeft = data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
+joinRight = data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
+joinDatasets("SocioMap", joinLeft, joinRight)
 }

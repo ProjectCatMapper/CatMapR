@@ -30,5 +30,5 @@ API response
 This is a helper function to call the API. It takes the endpoint, parameters, request type, and URL as input and returns the API response.
 }
 \examples{
-callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
 }

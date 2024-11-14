@@ -24,7 +24,7 @@ callAPI = function(endpoint,
   e = NULL
   if (request == "GET") {
     result = tryCatch(
-      httr::GET(glue::glue("{url}/{endpoint}"),
+      httr::GET(paste0(url,"/",endpoint),
                 query = parameters),
       error = function(e) {
         warning(e)
@@ -36,7 +36,7 @@ callAPI = function(endpoint,
       parameters = jsonlite::toJSON(parameters)
     }
     result = tryCatch(
-      httr::POST(glue::glue("{url}/{endpoint}"),
+      httr::POST(paste0(url,"/",endpoint),
                  body = parameters,
                  encode = "json",
                  httr::content_type_json()),
