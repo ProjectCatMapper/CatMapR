@@ -11,7 +11,7 @@
 #' @return API response
 #'
 #' @examples
-#' callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+#' CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
 callAPI = function(endpoint,
                      parameters,
                      request = "GET",
