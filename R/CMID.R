@@ -14,12 +14,11 @@
 #' CMIDinfo(database = "ArchaMap", cmid = "AM1")
 CMIDinfo <- function(database, cmid) {
 
-  # Define the endpoint and parameters
-  endpoint <- "CMID"
-  parameters <- list(database = database, cmid = cmid)
+  # New REST format: /CMID/<database>/<cmid>
+  endpoint <- paste("CMID", database, cmid, sep = "/")
 
   # Call the API using the callAPI function
-  response <- callAPI(endpoint = endpoint, parameters = parameters, request = "GET")
+  response <- callAPI(endpoint = endpoint, parameters = list(), request = "GET")
 
   # Return the response
   return(response)

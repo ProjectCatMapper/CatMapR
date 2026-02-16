@@ -211,3 +211,24 @@ test_that("CATMAPR_API_URL controls default API URL resolution", {
     "https://override.example.org/api"
   )
 })
+
+test_that("CMIDinfo uses REST-style CMID/database/cmid endpoint", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::CMIDinfo(database = "SocioMap", cmid = "SM1")
+
+  expect_equal(result, list(ok = TRUE))
+  expect_identical(captured$endpoint, "CMID/SocioMap/SM1")
+  expect_identical(captured$request, "GET")
+  expect_identical(captured$parameters, list())
+})
