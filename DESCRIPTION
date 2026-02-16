@@ -1,7 +1,7 @@
 Package: CatMapR
 Type: Package
 Title: This package interfaces with the CatMapper application API (catmapper.org)
-Version: 0.1.1
+Version: 2026.02.16.1131
 Author: Robert J. Bischoff
 Maintainer: Robert J. Bischoff <bischrob@gmail.com>
 Description: CatMapper organizes dynamic and complex category systems commonly used by scientists and policymakers, including ethnicities, languages, religions, political districts, political parties, and technologies. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets.
