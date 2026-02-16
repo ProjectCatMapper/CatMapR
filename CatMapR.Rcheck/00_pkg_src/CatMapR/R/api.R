@@ -5,19 +5,33 @@
 #' @param endpoint API endpoint
 #' @param parameters API parameters
 #' @param request GET or POST
-#' @param url API URL
+#' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set, otherwise \code{"https://api.catmapper.org"}.
 #' @param type default or stream
 #'
 #' @return API response
 #'
 #' @examples
 #' CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+resolve_api_url <- function(url = NULL) {
+  if (!is.null(url) && nzchar(url)) {
+    return(url)
+  }
+
+  env_url <- Sys.getenv("CATMAPR_API_URL", unset = "")
+  if (nzchar(env_url)) {
+    return(env_url)
+  }
+
+  "https://api.catmapper.org"
+}
+
 callAPI = function(endpoint,
                      parameters,
                      request = "GET",
-                     url = "https://api.catmapper.org",
+                     url = NULL,
                      type = "default"
 ) {
+  url <- resolve_api_url(url)
   tictoc::tic("API call")
   httr::set_config(httr::config(ssl_verifypeer = 0L))
   result = NULL

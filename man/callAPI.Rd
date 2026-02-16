@@ -8,7 +8,7 @@ callAPI(
   endpoint,
   parameters,
   request = "GET",
-  url = "https://api.catmapper.org",
+  url = NULL,
   type = "default"
 )
 }
@@ -19,7 +19,7 @@ callAPI(
 
 \item{request}{GET or POST}
 
-\item{url}{API URL}
+\item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set, otherwise \code{"https://api.catmapper.org"}.}
 
 \item{type}{default or stream}
 }

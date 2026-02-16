@@ -19,8 +19,8 @@ Type 'q()' to quit R.
 > library(CatMapR)
 > 
 > test_check("CatMapR")
-[ FAIL 0 | WARN 0 | SKIP 0 | PASS 30 ]
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 33 ]
 > 
 > proc.time()
    user  system elapsed 
-  0.502   0.102   0.582 
+  0.485   0.112   0.574 

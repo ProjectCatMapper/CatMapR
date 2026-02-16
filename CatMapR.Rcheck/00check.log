@@ -2,7 +2,7 @@
 * using R version 4.1.2 (2021-11-01)
 * using platform: x86_64-pc-linux-gnu (64-bit)
 * using session charset: UTF-8
-* using option ‘--no-manual’
+* using options ‘--no-examples --no-manual’
 * checking for file ‘CatMapR/DESCRIPTION’ ... OK
 * checking extension type ... Package
 * this is package ‘CatMapR’ version ‘0.1.1’
@@ -44,7 +44,7 @@
 * checking Rd \usage sections ... OK
 * checking Rd contents ... OK
 * checking for unstated dependencies in examples ... OK
-* checking examples ... OK
+* checking examples ... SKIPPED
 * checking for unstated dependencies in ‘tests’ ... OK
 * checking tests ... OK
   Running ‘testthat.R’

@@ -42,6 +42,14 @@ The **CatMapR** package includes the following main functions:
 
 Here are examples of how to use the primary functions in **CatMapR**.
 
+### Configure API URL (Optional)
+
+Set `CATMAPR_API_URL` to point to a different CatMapper API deployment:
+
+```r
+Sys.setenv(CATMAPR_API_URL = "https://api.catmapper.org")
+```
+
 ### Retrieve All Datasets
 
 ```r

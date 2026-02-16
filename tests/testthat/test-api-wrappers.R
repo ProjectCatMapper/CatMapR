@@ -183,3 +183,31 @@ test_that("joinDatasets includes domain in post payload", {
   expect_identical(captured$request, "POST")
   expect_identical(captured$parameters$domain, "CATEGORY")
 })
+
+test_that("CATMAPR_API_URL controls default API URL resolution", {
+  original <- Sys.getenv("CATMAPR_API_URL", unset = NA_character_)
+  on.exit({
+    if (is.na(original)) {
+      Sys.unsetenv("CATMAPR_API_URL")
+    } else {
+      Sys.setenv(CATMAPR_API_URL = original)
+    }
+  }, add = TRUE)
+
+  Sys.unsetenv("CATMAPR_API_URL")
+  expect_identical(
+    CatMapR:::resolve_api_url(NULL),
+    "https://api.catmapper.org"
+  )
+
+  Sys.setenv(CATMAPR_API_URL = "https://example.org/custom-api")
+  expect_identical(
+    CatMapR:::resolve_api_url(NULL),
+    "https://example.org/custom-api"
+  )
+
+  expect_identical(
+    CatMapR:::resolve_api_url("https://override.example.org/api"),
+    "https://override.example.org/api"
+  )
+})
