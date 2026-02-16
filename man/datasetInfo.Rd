@@ -4,7 +4,7 @@
 \alias{datasetInfo}
 \title{Retrieve Dataset Information by CMID}
 \usage{
-datasetInfo(database, CMID, domain = "CATEGORY")
+datasetInfo(database, CMID, domain = "CATEGORY", children = NULL)
 }
 \arguments{
 \item{database}{A string specifying the database to search in. Valid options are "SocioMap" or "ArchaMap".}
@@ -12,6 +12,8 @@ datasetInfo(database, CMID, domain = "CATEGORY")
 \item{CMID}{The CMID of the dataset to retrieve information for (e.g., "SD1" or "AD1").}
 
 \item{domain}{(Optional) A category to filter dataset relationships. Defaults to "CATEGORY" if not specified.}
+
+\item{children}{(Optional) If TRUE, include child datasets in the query.}
 }
 \value{
 A list containing detailed information about the dataset, or an error message if the request fails.

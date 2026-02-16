@@ -8,7 +8,7 @@ callAPI(
   endpoint,
   parameters,
   request = "GET",
-  url = "https://catmapper.org/api",
+  url = "https://api.catmapper.org",
   type = "default"
 )
 }

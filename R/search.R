@@ -10,13 +10,15 @@
 #' @param yearEnd year to search by end
 #' @param country country to search by (must be a CMID)
 #' @param context context to search by (e.g., hierarchical category as in the state for a county--must be a CMID)
-#' @param limit limit number of results
+#' @param dataset dataset to search by (must be a dataset CMID)
+#' @param query return query instead of results ('true' or 'false')
+#' @param limit limit number of results (currently ignored by API and capped at 10,000 server-side)
 #'
-#' @return dataframe
+#' @return A list with \code{data} and \code{count} elements.
 #' @export
 #'
 #' @examples
-#' searchDatabase(database = "SocioMap",domain = "ETHNICITY", term = "Dan",property = "Name", yearStart = NULL, yearEnd = NULL, context = NULL, limit = 1000)
+#' searchDatabase(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
 searchDatabase = function(database,
                   domain = NULL,
                   term = NULL,
@@ -25,6 +27,8 @@ searchDatabase = function(database,
                   yearEnd = NULL,
                   country = NULL,
                   context = NULL,
+                  dataset = NULL,
+                  query = "false",
                   limit = 1000){
   result = callAPI(endpoint = "search",
                    parameters = list(
@@ -36,6 +40,8 @@ searchDatabase = function(database,
                      yearEnd = yearEnd,
                      country = country,
                      context = context,
+                     dataset = dataset,
+                     query = query,
                      limit = limit)
   )
   return(result)

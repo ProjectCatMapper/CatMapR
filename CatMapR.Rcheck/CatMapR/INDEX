@@ -1,0 +1,9 @@
+allDatasets             Retrieve All Datasets from a Specified Database
+callAPI                 Call API
+CMIDinfo                Retrieve Details for a Specific CMID
+                        (CatMapperID)
+createLinkfile          Create Linkfile from Dataset CMIDs
+datasetInfo             Retrieve Dataset Information by CMID
+joinDatasets            Join Datasets by Key
+searchDatabase          Search
+translate               Translate

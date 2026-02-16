@@ -63,9 +63,10 @@ print(cmid_info)
 ```r
 # Create a linkfile to merge datasets based on the ETHNICITY domain
 merged_data <- createLinkfile(
-  categoryLabel = c("ETHNICITY"),
+  categoryLabel = "ETHNICITY",
   datasetChoices = c("SD5", "SD6"),
-  database = "SocioMap"
+  database = "SocioMap",
+  equivalence = "standard"
 )
 print(merged_data)
 ```
@@ -76,7 +77,12 @@ print(merged_data)
 # Join two datasets by matching keys in the SocioMap database
 joinLeft <- data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
 joinRight <- data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
-joined_data <- joinDatasets(database = "SocioMap", joinLeft = joinLeft, joinRight = joinRight)
+joined_data <- joinDatasets(
+  database = "SocioMap",
+  joinLeft = joinLeft,
+  joinRight = joinRight,
+  domain = "CATEGORY"
+)
 print(joined_data)
 ```
 
@@ -90,7 +96,7 @@ search_results <- searchDatabase(
   term = "Afghanistan",
   property = "Name"
 )
-print(search_results)
+print(search_results$data)
 ```
 
 ### Translate Terms within a Dataset
@@ -105,7 +111,7 @@ translated_df <- translate(
   term = "country",
   property = "Name"
 )
-print(translated_df)
+print(translated_df$file)
 ```
 
 ## Dependencies
@@ -114,7 +120,6 @@ CatMapR relies on the following R packages:
 - `httr`: For making HTTP requests to the CatMapper API.
 - `jsonlite`: For handling JSON responses.
 - `tictoc`: For timing API calls.
-- `xml2`: For parsing XML content when applicable.
 
 ## License
 

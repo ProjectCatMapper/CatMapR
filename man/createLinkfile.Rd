@@ -8,17 +8,29 @@ createLinkfile(
   categoryLabel,
   datasetChoices,
   database = "SocioMap",
-  intersection = FALSE
+  intersection = FALSE,
+  equivalence = "standard",
+  mergelevel = 2,
+  resultFormat = "key-to-key",
+  selectedKeyvariable = list()
 )
 }
 \arguments{
-\item{categoryLabel}{Character vector specifying the category domain for the merge.}
+\item{categoryLabel}{Character string specifying the category domain for the merge.}
 
-\item{datasetChoices}{Character vector of CMIDs representing the selected datasets.}
+\item{datasetChoices}{Character vector or comma-separated string of dataset CMIDs.}
 
 \item{database}{Character string specifying the database to use. (default: "SocioMap" -- "ArchaMap" is the other option)}
 
 \item{intersection}{Boolean value specifying whether to return the intersection of the datasets or all categories. (default: FALSE)}
+
+\item{equivalence}{Merge mode, either "standard" or "extended".}
+
+\item{mergelevel}{Number of CONTAINS hops to use when \code{equivalence = "extended"}.}
+
+\item{resultFormat}{Output format expected by the API ("key-to-key", "key-to-category", or "category-to-category").}
+
+\item{selectedKeyvariable}{Named list of key prefixes used for filtering in extended mode.}
 }
 \value{
 Dataframe containing proposed merge information.
@@ -38,6 +50,6 @@ It then processes the response and returns a list of dictionaries containing pro
 
 categoryLabel <- c("ETHNICITY")
 datasetChoices <- c("SD5", "SD6")
-merged_data <- createLinkfile(categoryLabel, datasetChoices)
+merged_data <- createLinkfile(categoryLabel, datasetChoices, equivalence = "standard")
 
 }

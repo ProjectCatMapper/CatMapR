@@ -13,6 +13,8 @@ searchDatabase(
   yearEnd = NULL,
   country = NULL,
   context = NULL,
+  dataset = NULL,
+  query = "false",
   limit = 1000
 )
 }
@@ -33,14 +35,18 @@ searchDatabase(
 
 \item{context}{context to search by (e.g., hierarchical category as in the state for a county--must be a CMID)}
 
-\item{limit}{limit number of results}
+\item{dataset}{dataset to search by (must be a dataset CMID)}
+
+\item{query}{return query instead of results ('true' or 'false')}
+
+\item{limit}{limit number of results (currently ignored by API and capped at 10,000 server-side)}
 }
 \value{
-dataframe
+A list with \code{data} and \code{count} elements.
 }
 \description{
 Search for a term in a database and retrieve the CMID (CatMapperID), CMName (CatMapper Name), and other information about the matches.
 }
 \examples{
-searchDatabase(database = "SocioMap",domain = "ETHNICITY", term = "Dan",property = "Name", yearStart = NULL, yearEnd = NULL, context = NULL, limit = 1000)
+searchDatabase(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
 }

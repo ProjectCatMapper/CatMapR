@@ -3,10 +3,14 @@
 #' This function propose a merge based on a category domain and selected datasets.
 #' It then processes the response and returns a list of dictionaries containing proposed merge information.
 #'
-#' @param categoryLabel Character vector specifying the category domain for the merge.
-#' @param datasetChoices Character vector of CMIDs representing the selected datasets.
+#' @param categoryLabel Character string specifying the category domain for the merge.
+#' @param datasetChoices Character vector or comma-separated string of dataset CMIDs.
 #' @param database Character string specifying the database to use. (default: "SocioMap" -- "ArchaMap" is the other option)
 #' @param intersection Boolean value specifying whether to return the intersection of the datasets or all categories. (default: FALSE)
+#' @param equivalence Merge mode, either "standard" or "extended".
+#' @param mergelevel Number of CONTAINS hops to use when \code{equivalence = "extended"}.
+#' @param resultFormat Output format expected by the API ("key-to-key", "key-to-category", or "category-to-category").
+#' @param selectedKeyvariable Named list of key prefixes used for filtering in extended mode.
 #'
 #' @return Dataframe containing proposed merge information.
 #'   - datasetID: Character string representing the dataset ID.
@@ -21,15 +25,34 @@
 #'
 #' categoryLabel <- c("ETHNICITY")
 #' datasetChoices <- c("SD5", "SD6")
-#' merged_data <- createLinkfile(categoryLabel, datasetChoices)
+#' merged_data <- createLinkfile(categoryLabel, datasetChoices, equivalence = "standard")
 #'
-createLinkfile <- function(categoryLabel, datasetChoices, database = "SocioMap", intersection = FALSE) {
+createLinkfile <- function(categoryLabel,
+                           datasetChoices,
+                           database = "SocioMap",
+                           intersection = FALSE,
+                           equivalence = "standard",
+                           mergelevel = 2,
+                           resultFormat = "key-to-key",
+                           selectedKeyvariable = list()) {
+  if (length(datasetChoices) > 1) {
+    datasetChoices <- paste(datasetChoices, collapse = ",")
+  }
+
+  if (length(categoryLabel) > 1) {
+    categoryLabel <- categoryLabel[1]
+  }
+
   # Prepare parameters for the API call
   params <- list(
     database = database,
     datasetChoices = datasetChoices,
     categoryLabel = categoryLabel,
-    intersection = intersection
+    intersection = intersection,
+    mergelevel = mergelevel,
+    equivalence = equivalence,
+    resultFormat = resultFormat,
+    selectedKeyvariable = selectedKeyvariable
   )
 
   # Call the API using the callAPI function

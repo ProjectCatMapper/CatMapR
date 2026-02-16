@@ -15,13 +15,12 @@
 callAPI = function(endpoint,
                      parameters,
                      request = "GET",
-                     url = "https://catmapper.org/api",
+                     url = "https://api.catmapper.org",
                      type = "default"
 ) {
   tictoc::tic("API call")
   httr::set_config(httr::config(ssl_verifypeer = 0L))
   result = NULL
-  e = NULL
   if (request == "GET") {
     result = tryCatch(
       httr::GET(paste0(url,"/",endpoint),
@@ -32,8 +31,10 @@ callAPI = function(endpoint,
       }
     )
   } else {
-    if (!jsonlite::validate(parameters[[1]])) {
-      parameters = jsonlite::toJSON(parameters)
+    if (is.character(parameters) &&
+        length(parameters) == 1 &&
+        jsonlite::validate(parameters)) {
+      parameters = jsonlite::fromJSON(parameters, simplifyVector = FALSE)
     }
     result = tryCatch(
       httr::POST(paste0(url,"/",endpoint),
@@ -48,52 +49,45 @@ callAPI = function(endpoint,
   }
   if (!is.null(result) && !is.null(result$status_code) && result$status_code == 200) {
     resultContent = tryCatch(
-      httr::content(result),
+      httr::content(result, as = "text", encoding = "UTF-8"),
       error = function(e)
         return(e)
     )
-    if (inherits(resultContent, "xml_node")) {
-      resultData = tryCatch(
-        xml2::as_list(resultContent) |> unlist() |> unname(),
-        error = function(e)
-          return(e)
-      )
-    } else if (is.character(resultContent)) {
-      if (type == "default"){
+    if (is.character(resultContent)) {
+      if (type == "default") {
         resultData = tryCatch(
           resultContent |> jsonlite::fromJSON(),
-          error = function(e) {
-            warning(e)
-            return(NULL)
-          }
+          error = function(e)
+            resultContent
         )
-      } else if (type == "stream"){
+      } else if (type == "stream") {
         resultData = resultContent
       } else {
         resultData = "Error: must specify type as default or stream"
       }
-
     } else {
-      resultData = tryCatch(
-        jsonlite::toJSON(resultContent, auto_unbox = T) |> jsonlite::fromJSON(),
-        error = function(e) {
-          warning(e)
-          return(NULL)
-        }
-      )
+      resultData = resultContent
     }
   } else {
     resultContent = tryCatch(
-      httr::content(result),
+      httr::content(result, as = "text", encoding = "UTF-8"),
       error = function(e)
-        return(e)
+        "Unknown error"
     )
-    errMsg = tryCatch(
-      xml2::as_list(resultContent) |> unlist() |> unname(),
+    parsedErr = tryCatch(
+      jsonlite::fromJSON(resultContent),
       error = function(e)
-        return("Unknown error")
+        NULL
     )
-    warning(e)
+
+    errMsg = if (!is.null(parsedErr) && !is.null(parsedErr$error)) {
+      parsedErr$error
+    } else if (is.character(resultContent)) {
+      resultContent
+    } else {
+      "Unknown error"
+    }
+
     resultData = list(error = errMsg)
   }
   tictoc::toc()

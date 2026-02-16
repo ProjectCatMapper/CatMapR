@@ -16,10 +16,14 @@ translate(
   yearStart = NULL,
   yearEnd = NULL,
   key = "false",
-  query = "false"
+  query = "false",
+  countsamename = FALSE,
+  uniqueRows = TRUE
 )
 }
 \arguments{
+\item{rows}{data frame to translate}
+
 \item{database}{database to use (SocioMap or ArchaMap)}
 
 \item{term}{column name to translate}
@@ -32,14 +36,22 @@ translate(
 
 \item{country}{column name of country to search by (CMID)}
 
+\item{dataset}{column name of dataset to search by (dataset CMID)}
+
 \item{yearStart}{year to search by start}
 
 \item{yearEnd}{year to search by end}
 
+\item{key}{include Key values in results ('true' or 'false')}
+
 \item{query}{return query instead of results}
+
+\item{countsamename}{count duplicate matching names in scoring logic}
+
+\item{uniqueRows}{deduplicate identical input rows before matching}
 }
 \value{
-dataframe
+A list with \code{file} and \code{order} from the API.
 }
 \description{
 This function translate a dataframe by matching the specified term with the property in the database.

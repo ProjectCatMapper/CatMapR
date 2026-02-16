@@ -4,7 +4,7 @@
 \alias{joinDatasets}
 \title{Join Datasets by Key}
 \usage{
-joinDatasets(database, joinLeft, joinRight)
+joinDatasets(database, joinLeft, joinRight, domain = "CATEGORY")
 }
 \arguments{
 \item{database}{A string specifying the database to use, either "SocioMap" or "ArchaMap".}
@@ -12,6 +12,8 @@ joinDatasets(database, joinLeft, joinRight)
 \item{joinLeft}{A data frame representing the left dataset with a "datasetID" column and other relevant columns.}
 
 \item{joinRight}{A data frame representing the right dataset with a "datasetID" column and other relevant columns.}
+
+\item{domain}{Category domain label to use for joining keys (default: "CATEGORY").}
 }
 \value{
 A data frame containing the joined datasets or an error message if the request fails.
@@ -24,5 +26,5 @@ The function requires a column named 'datasetID' in both datasets that has the C
 \examples{
 joinLeft = data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
 joinRight = data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
-joinDatasets("SocioMap", joinLeft, joinRight)
+joinDatasets("SocioMap", joinLeft, joinRight, domain = "CATEGORY")
 }
