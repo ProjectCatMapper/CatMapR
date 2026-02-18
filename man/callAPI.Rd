@@ -9,7 +9,8 @@ callAPI(
   parameters,
   request = "GET",
   url = NULL,
-  type = "default"
+  type = "default",
+  headers = NULL
 )
 }
 \arguments{
@@ -22,13 +23,17 @@ callAPI(
 \item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set, otherwise \code{"https://api.catmapper.org"}.}
 
 \item{type}{default or stream}
+
+\item{headers}{Optional named list of request headers, for example \code{list("X-API-Key" = "cmk_...")}.}
 }
 \value{
 API response
 }
 \description{
-This is a helper function to call the API. It takes the endpoint, parameters, request type, and URL as input and returns the API response.
+Helper function to call the CatMapper API.
 }
 \examples{
 CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+
 }
+\keyword{internal}

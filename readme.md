@@ -37,6 +37,9 @@ The **CatMapR** package includes the following main functions:
 - **`joinDatasets`**: Joins two datasets based on specified parameters, returning the joined data with translated keys.
 - **`searchDatabase`**: Searches for terms within a database, allowing filtering by domain, property, year, and context.
 - **`translate`**: Translates terms within datasets by matching specified properties and domains, facilitating category consistency across data sources.
+- **`uploadInputNodes`**: Uploads edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required).
+- **`updateWaitingUSES`**: Triggers `/updateWaitingUSES` after uploads (write operation; API key required).
+- **`submitEditUpload`**: Runs the same two-step flow as the CatMapperJS edit page: upload, then waiting-USES refresh.
 
 ## Usage
 
@@ -48,6 +51,16 @@ Set `CATMAPR_API_URL` to point to a different CatMapper API deployment:
 
 ```r
 Sys.setenv(CATMAPR_API_URL = "https://api.catmapper.org")
+```
+
+### Configure API Key for Write Operations
+
+Write endpoints (for example uploads) require an API key:
+
+```r
+Sys.setenv(CATMAPR_API_KEY = "cmk_your_api_key")
+# Optional, but recommended when your deployment validates user + key:
+Sys.setenv(CATMAPR_API_USER = "your-userid")
 ```
 
 ### Retrieve All Datasets
@@ -120,6 +133,38 @@ translated_df <- translate(
   property = "Name"
 )
 print(translated_df$file)
+```
+
+### Upload Edit-Page Data (Write API)
+
+```r
+upload_payload <- data.frame(
+  CMName = "Yoruba",
+  Name = "Yoruba",
+  Key = "eth:yoruba",
+  stringsAsFactors = FALSE
+)
+
+result <- submitEditUpload(
+  df = upload_payload,
+  database = "SocioMap",
+  formData = list(
+    domain = "ETHNICITY",
+    subdomain = "ETHNICITY",
+    datasetID = "SD1",
+    cmNameColumn = "CMName",
+    categoryNamesColumn = "Name",
+    alternateCategoryNamesColumns = character(0),
+    cmidColumn = "CMID",
+    keyColumn = "Key"
+  ),
+  so = "simple",
+  ao = "add_uses",
+  user = "your-userid",
+  api_key = Sys.getenv("CATMAPR_API_KEY")
+)
+
+print(result$upload)
 ```
 
 ## Dependencies

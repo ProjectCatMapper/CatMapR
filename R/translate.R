@@ -2,6 +2,7 @@
 #'
 #' This function translate a dataframe by matching the specified term with the property in the database.
 #'
+#' @param rows data frame to translate
 #' @param database database to use (SocioMap or ArchaMap)
 #' @param domain name of category domain to search for (DISTRICT, ETHNICITY, etc.)
 #' @param term column name to translate

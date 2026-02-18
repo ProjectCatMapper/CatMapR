@@ -1,17 +1,10 @@
-#' Call API
+#' Resolve CatMapper API URL
 #'
-#' This is a helper function to call the API. It takes the endpoint, parameters, request type, and URL as input and returns the API response.
-#'
-#' @param endpoint API endpoint
-#' @param parameters API parameters
-#' @param request GET or POST
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set, otherwise \code{"https://api.catmapper.org"}.
-#' @param type default or stream
 #'
-#' @return API response
+#' @return Resolved base API URL.
 #'
-#' @examples
-#' CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+#' @keywords internal
 resolve_api_url <- function(url = NULL) {
   if (!is.null(url) && nzchar(url)) {
     return(url)
@@ -25,20 +18,53 @@ resolve_api_url <- function(url = NULL) {
   "https://api.catmapper.org"
 }
 
+#' Call API
+#'
+#' Helper function to call the CatMapper API.
+#'
+#' @param endpoint API endpoint
+#' @param parameters API parameters
+#' @param request GET or POST
+#' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set, otherwise \code{"https://api.catmapper.org"}.
+#' @param type default or stream
+#' @param headers Optional named list of request headers, for example \code{list("X-API-Key" = "cmk_...")}.
+#'
+#' @return API response
+#'
+#' @examples
+#' CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+#'
+#' @keywords internal
 callAPI = function(endpoint,
                      parameters,
                      request = "GET",
                      url = NULL,
-                     type = "default"
+                     type = "default",
+                     headers = NULL
 ) {
   url <- resolve_api_url(url)
   tictoc::tic("API call")
   httr::set_config(httr::config(ssl_verifypeer = 0L))
+  request_headers <- NULL
+  if (!is.null(headers) && length(headers) > 0) {
+    headers <- headers[!vapply(headers, is.null, logical(1))]
+    if (length(headers) > 0) {
+      request_headers <- do.call(httr::add_headers, headers)
+    }
+  }
   result = NULL
   if (request == "GET") {
     result = tryCatch(
-      httr::GET(paste0(url,"/",endpoint),
-                query = parameters),
+      do.call(
+        httr::GET,
+        c(
+          list(
+            paste0(url, "/", endpoint),
+            query = parameters
+          ),
+          if (!is.null(request_headers)) list(request_headers) else list()
+        )
+      ),
       error = function(e) {
         warning(e)
         return(e)
@@ -51,10 +77,18 @@ callAPI = function(endpoint,
       parameters = jsonlite::fromJSON(parameters, simplifyVector = FALSE)
     }
     result = tryCatch(
-      httr::POST(paste0(url,"/",endpoint),
-                 body = parameters,
-                 encode = "json",
-                 httr::content_type_json()),
+      do.call(
+        httr::POST,
+        c(
+          list(
+            paste0(url, "/", endpoint),
+            body = parameters,
+            encode = "json",
+            httr::content_type_json()
+          ),
+          if (!is.null(request_headers)) list(request_headers) else list()
+        )
+      ),
       error = function(e) {
         warning(e)
         return(e)
