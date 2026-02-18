@@ -9,11 +9,9 @@
 #' @param so Upload mode, usually \code{"standard"} or \code{"simple"}.
 #' @param ao Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.
 #' @param addoptions Named list with \code{district} and \code{recordyear} booleans.
-#' @param user Optional CatMapper user id for attribution/logging.
 #' @param allContext Optional vector/list of contextual columns.
 #' @param mergingType Optional merging mode used by merge upload workflows.
 #' @param api_key API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.
-#' @param api_user Optional API user id. If omitted, \code{user} or \code{CATMAPR_API_USER} is used when available.
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
@@ -36,7 +34,6 @@
 #'   ),
 #'   so = "simple",
 #'   ao = "add_uses",
-#'   user = "your-userid",
 #'   api_key = Sys.getenv("CATMAPR_API_KEY")
 #' )
 #' }
@@ -46,14 +43,11 @@ uploadInputNodes <- function(df,
                              so = "standard",
                              ao = "add_node",
                              addoptions = list(district = FALSE, recordyear = FALSE),
-                             user = NULL,
                              allContext = list(),
                              mergingType = "0",
                              api_key = NULL,
-                             api_user = NULL,
                              url = NULL) {
   key <- resolve_api_key(api_key)
-  resolved_user <- resolve_api_user(api_user = api_user, user = user)
   if (!is.list(formData)) {
     stop("`formData` must be a list.")
   }
@@ -65,16 +59,11 @@ uploadInputNodes <- function(df,
     so = so,
     ao = ao,
     addoptions = normalize_addoptions(addoptions),
-    user = user,
     allContext = allContext,
     mergingType = mergingType
   )
 
-  if (!is.null(resolved_user) && nzchar(resolved_user)) {
-    payload$cred <- list(userid = resolved_user, key = key)
-  }
-
-  headers <- build_api_key_headers(api_key = key, api_user = resolved_user)
+  headers <- build_api_key_headers(api_key = key)
 
   callAPI(
     endpoint = "uploadInputNodes",
@@ -91,9 +80,7 @@ uploadInputNodes <- function(df,
 #' This wrapper is intended for write operations and requires an API key.
 #'
 #' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
-#' @param user Optional CatMapper user id for attribution/logging.
 #' @param api_key API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.
-#' @param api_user Optional API user id. If omitted, \code{user} or \code{CATMAPR_API_USER} is used when available.
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
@@ -103,23 +90,16 @@ uploadInputNodes <- function(df,
 #' \dontrun{
 #' updateWaitingUSES(
 #'   database = "SocioMap",
-#'   user = "your-userid",
 #'   api_key = Sys.getenv("CATMAPR_API_KEY")
 #' )
 #' }
 updateWaitingUSES <- function(database,
-                              user = NULL,
                               api_key = NULL,
-                              api_user = NULL,
                               url = NULL) {
   key <- resolve_api_key(api_key)
-  resolved_user <- resolve_api_user(api_user = api_user, user = user)
   payload <- list(database = database)
-  if (!is.null(resolved_user) && nzchar(resolved_user)) {
-    payload$cred <- list(userid = resolved_user, key = key)
-  }
 
-  headers <- build_api_key_headers(api_key = key, api_user = resolved_user)
+  headers <- build_api_key_headers(api_key = key)
 
   callAPI(
     endpoint = "updateWaitingUSES",
@@ -157,7 +137,6 @@ updateWaitingUSES <- function(database,
 #'   ),
 #'   so = "simple",
 #'   ao = "add_uses",
-#'   user = "your-userid",
 #'   api_key = Sys.getenv("CATMAPR_API_KEY")
 #' )
 #' }
@@ -167,11 +146,9 @@ submitEditUpload <- function(df,
                              so = "standard",
                              ao = "add_node",
                              addoptions = list(district = FALSE, recordyear = FALSE),
-                             user = NULL,
                              allContext = list(),
                              mergingType = "0",
                              api_key = NULL,
-                             api_user = NULL,
                              refresh_waiting_uses = TRUE,
                              url = NULL) {
   upload_result <- uploadInputNodes(
@@ -181,11 +158,9 @@ submitEditUpload <- function(df,
     so = so,
     ao = ao,
     addoptions = addoptions,
-    user = user,
     allContext = allContext,
     mergingType = mergingType,
     api_key = api_key,
-    api_user = api_user,
     url = url
   )
 
@@ -193,9 +168,7 @@ submitEditUpload <- function(df,
   if (isTRUE(refresh_waiting_uses)) {
     waiting_result <- updateWaitingUSES(
       database = database,
-      user = user,
       api_key = api_key,
-      api_user = api_user,
       url = url
     )
   }
@@ -216,28 +189,8 @@ resolve_api_key <- function(api_key = NULL) {
   stop("An API key is required for write operations. Set `api_key` or CATMAPR_API_KEY.")
 }
 
-resolve_api_user <- function(api_user = NULL, user = NULL) {
-  if (!is.null(api_user) && nzchar(api_user)) {
-    return(api_user)
-  }
-  if (!is.null(user) && nzchar(user)) {
-    return(user)
-  }
-
-  env_user <- Sys.getenv("CATMAPR_API_USER", unset = "")
-  if (nzchar(env_user)) {
-    return(env_user)
-  }
-
-  NULL
-}
-
-build_api_key_headers <- function(api_key, api_user = NULL) {
-  headers <- list("X-API-Key" = api_key)
-  if (!is.null(api_user) && nzchar(api_user)) {
-    headers[["X-API-User"]] <- api_user
-  }
-  headers
+build_api_key_headers <- function(api_key) {
+  list("X-API-Key" = api_key)
 }
 
 coerce_upload_rows <- function(df) {

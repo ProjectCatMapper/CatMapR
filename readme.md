@@ -59,9 +59,9 @@ Write endpoints (for example uploads) require an API key:
 
 ```r
 Sys.setenv(CATMAPR_API_KEY = "cmk_your_api_key")
-# Optional, but recommended when your deployment validates user + key:
-Sys.setenv(CATMAPR_API_USER = "your-userid")
 ```
+
+For write calls, CatMapper identifies the acting user from the API key on the server side.
 
 ### Retrieve All Datasets
 
@@ -160,7 +160,6 @@ result <- submitEditUpload(
   ),
   so = "simple",
   ao = "add_uses",
-  user = "your-userid",
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 

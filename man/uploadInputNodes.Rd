@@ -11,11 +11,9 @@ uploadInputNodes(
   so = "standard",
   ao = "add_node",
   addoptions = list(district = FALSE, recordyear = FALSE),
-  user = NULL,
   allContext = list(),
   mergingType = "0",
   api_key = NULL,
-  api_user = NULL,
   url = NULL
 )
 }
@@ -32,15 +30,11 @@ uploadInputNodes(
 
 \item{addoptions}{Named list with \code{district} and \code{recordyear} booleans.}
 
-\item{user}{Optional CatMapper user id for attribution/logging.}
-
 \item{allContext}{Optional vector/list of contextual columns.}
 
 \item{mergingType}{Optional merging mode used by merge upload workflows.}
 
 \item{api_key}{API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.}
-
-\item{api_user}{Optional API user id. If omitted, \code{user} or \code{CATMAPR_API_USER} is used when available.}
 
 \item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.}
 }
@@ -68,7 +62,6 @@ uploadInputNodes(
   ),
   so = "simple",
   ao = "add_uses",
-  user = "your-userid",
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 }

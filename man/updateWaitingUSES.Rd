@@ -4,22 +4,12 @@
 \alias{updateWaitingUSES}
 \title{Refresh Waiting USES Queue}
 \usage{
-updateWaitingUSES(
-  database,
-  user = NULL,
-  api_key = NULL,
-  api_user = NULL,
-  url = NULL
-)
+updateWaitingUSES(database, api_key = NULL, url = NULL)
 }
 \arguments{
 \item{database}{Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.}
 
-\item{user}{Optional CatMapper user id for attribution/logging.}
-
 \item{api_key}{API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.}
-
-\item{api_user}{Optional API user id. If omitted, \code{user} or \code{CATMAPR_API_USER} is used when available.}
 
 \item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.}
 }
@@ -34,7 +24,6 @@ This wrapper is intended for write operations and requires an API key.
 \dontrun{
 updateWaitingUSES(
   database = "SocioMap",
-  user = "your-userid",
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 }

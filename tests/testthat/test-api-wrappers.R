@@ -288,7 +288,6 @@ test_that("uploadInputNodes mirrors edit upload payload and includes API-key met
     ),
     so = "simple",
     ao = "add_uses",
-    user = "alice",
     allContext = c("Name"),
     api_key = "cmk_abc123"
   )
@@ -297,11 +296,11 @@ test_that("uploadInputNodes mirrors edit upload payload and includes API-key met
   expect_identical(captured$endpoint, "uploadInputNodes")
   expect_identical(captured$request, "POST")
   expect_identical(captured$headers[["X-API-Key"]], "cmk_abc123")
-  expect_identical(captured$headers[["X-API-User"]], "alice")
   expect_identical(captured$parameters$so, "simple")
   expect_identical(captured$parameters$ao, "add_uses")
   expect_identical(captured$parameters$database, "SocioMap")
-  expect_identical(captured$parameters$cred, list(userid = "alice", key = "cmk_abc123"))
+  expect_null(captured$parameters$user)
+  expect_null(captured$parameters$cred)
   expect_identical(captured$parameters$df[[1]]$CMName, "Yoruba")
   expect_identical(captured$parameters$addoptions, list(district = FALSE, recordyear = FALSE))
 })
@@ -330,15 +329,15 @@ test_that("updateWaitingUSES uses env API key when api_key argument is omitted",
     .package = "CatMapR"
   )
 
-  result <- CatMapR::updateWaitingUSES(database = "ArchaMap", user = "bob")
+  result <- CatMapR::updateWaitingUSES(database = "ArchaMap")
 
   expect_equal(result, list(ok = TRUE))
   expect_identical(captured$endpoint, "updateWaitingUSES")
   expect_identical(captured$request, "POST")
   expect_identical(captured$parameters$database, "ArchaMap")
   expect_identical(captured$headers[["X-API-Key"]], "env-key")
-  expect_identical(captured$headers[["X-API-User"]], "bob")
-  expect_identical(captured$parameters$cred, list(userid = "bob", key = "env-key"))
+  expect_null(captured$headers[["X-API-User"]])
+  expect_null(captured$parameters$cred)
 })
 
 test_that("submitEditUpload executes upload then waiting-uses refresh", {
