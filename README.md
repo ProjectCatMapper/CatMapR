@@ -8,10 +8,11 @@
 **CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to datasets, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research.
 
 This package allows users to:
-- Retrieve datasets and associated metadata from CatMapper databases.
-- Search for specific categories or entities and obtain detailed information.
-- Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
-- Create and join datasets across different domains for integrated analysis.
+
+* Retrieve datasets and associated metadata from CatMapper databases.
+* Search for specific categories or entities and obtain detailed information.
+* Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
+* Create and join datasets across different domains for integrated analysis.
 
 ## Installation
 
