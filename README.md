@@ -3,9 +3,9 @@
 # CatMapR
 
 <p>
-  <img src="man/figures/catmapper-logo.webp" alt="CatMapper logo" height="22" />
-  <img src="man/figures/sociomap-logo.webp" alt="SocioMap logo" height="26" />
-  <img src="man/figures/archamap-logo.webp" alt="ArchaMap logo" height="26" />
+  <img src="man/figures/catmapper-logo.webp" alt="CatMapper logo" height="15" />
+  <img src="man/figures/sociomap-logo.webp" alt="SocioMap logo" height="17" />
+  <img src="man/figures/archamap-logo.webp" alt="ArchaMap logo" height="17" />
 </p>
 
 
