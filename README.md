@@ -2,7 +2,13 @@
 
 # CatMapR
 
-<img src="man/figures/logo.png" align="right" height="150" />
+<img src="man/figures/logo.png" align="right" width="72" alt="CatMapR hex logo" />
+
+<p>
+  <img src="man/figures/catmapper-logo.webp" alt="CatMapper logo" height="22" />
+  <img src="man/figures/sociomap-logo.webp" alt="SocioMap logo" height="26" />
+  <img src="man/figures/archamap-logo.webp" alt="ArchaMap logo" height="26" />
+</p>
 
 
 **CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to datasets, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research.
