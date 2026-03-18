@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+CatMapR.Rcheck/
+.tmp-lib/
+CatMapR_*.tar.gz

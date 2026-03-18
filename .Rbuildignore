@@ -1,3 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.github$
+^CatMapR\.Rcheck$
+^CatMapR_.*\.tar\.gz$
+^CatMapR\.pdf$
+^license$
+^\.tmp-lib$
+^API_STABILITY_CONTRACT\.md$
