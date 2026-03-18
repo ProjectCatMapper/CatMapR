@@ -18,7 +18,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' searchDatabase(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
+#' }
 searchDatabase = function(database,
                   domain = NULL,
                   term = NULL,
@@ -30,6 +32,28 @@ searchDatabase = function(database,
                   dataset = NULL,
                   query = "false",
                   limit = 1000){
+  database <- validate_database(database)
+  if (!is.null(domain)) {
+    domain <- validate_scalar_character(domain, "domain")
+  }
+  if (!is.null(term)) {
+    term <- validate_scalar_character(term, "term")
+  }
+  property <- validate_scalar_character(property, "property")
+  if (!is.null(country)) {
+    country <- validate_scalar_character(country, "country")
+  }
+  if (!is.null(context)) {
+    context <- validate_scalar_character(context, "context")
+  }
+  if (!is.null(dataset)) {
+    dataset <- validate_scalar_character(dataset, "dataset")
+  }
+  query <- validate_choice(query, c("true", "false"), "query")
+  if (length(limit) != 1 || is.na(limit) || !is.numeric(limit) || limit < 1) {
+    stop("`limit` must be a positive number.", call. = FALSE)
+  }
+
   result = callAPI(endpoint = "search",
                    parameters = list(
                      term = term,

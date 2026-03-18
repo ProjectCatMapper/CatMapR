@@ -19,6 +19,8 @@ This function retrieves detailed information about a specified CatMapperID (CMID
 It fetches both node properties and their relationships associated with the given CMID.
 }
 \examples{
+\dontrun{
 CMIDinfo(database = "SocioMap", cmid = "SM1")
 CMIDinfo(database = "ArchaMap", cmid = "AM1")
+}
 }

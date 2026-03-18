@@ -47,6 +47,10 @@ uploadInputNodes <- function(df,
                              mergingType = "0",
                              api_key = NULL,
                              url = NULL) {
+  database <- validate_database(database)
+  so <- validate_scalar_character(so, "so")
+  ao <- validate_scalar_character(ao, "ao")
+  mergingType <- validate_scalar_character(mergingType, "mergingType")
   key <- resolve_api_key(api_key)
   if (!is.list(formData)) {
     stop("`formData` must be a list.")
@@ -96,6 +100,7 @@ uploadInputNodes <- function(df,
 updateWaitingUSES <- function(database,
                               api_key = NULL,
                               url = NULL) {
+  database <- validate_database(database)
   key <- resolve_api_key(api_key)
   payload <- list(database = database)
 
@@ -151,6 +156,14 @@ submitEditUpload <- function(df,
                              api_key = NULL,
                              refresh_waiting_uses = TRUE,
                              url = NULL) {
+  database <- validate_database(database)
+  so <- validate_scalar_character(so, "so")
+  ao <- validate_scalar_character(ao, "ao")
+  mergingType <- validate_scalar_character(mergingType, "mergingType")
+  if (!is.logical(refresh_waiting_uses) || length(refresh_waiting_uses) != 1 || is.na(refresh_waiting_uses)) {
+    stop("`refresh_waiting_uses` must be TRUE or FALSE.", call. = FALSE)
+  }
+
   upload_result <- uploadInputNodes(
     df = df,
     database = database,

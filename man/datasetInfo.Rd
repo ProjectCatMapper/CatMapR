@@ -23,6 +23,8 @@ This function retrieves detailed information about a dataset based on a given CM
 It fetches relationships and properties of datasets associated with the specified CMID.
 }
 \examples{
+\dontrun{
 datasetInfo(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
 datasetInfo(database = "ArchaMap", CMID = "AD1")
+}
 }

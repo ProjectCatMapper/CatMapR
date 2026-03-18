@@ -19,6 +19,14 @@ test_that("allDatasets uses expected endpoint and query parameters", {
   expect_identical(captured$parameters, list(database = "SocioMap"))
 })
 
+test_that("allDatasets validates database values", {
+  expect_error(
+    CatMapR::allDatasets(database = "UnknownMap"),
+    "`database` must be one of",
+    fixed = TRUE
+  )
+})
+
 test_that("datasetInfo includes domain and children parameters", {
   captured <- new.env(parent = emptyenv())
 
@@ -83,6 +91,20 @@ test_that("searchDatabase forwards modern search parameters", {
   expect_identical(captured$parameters$limit, 250)
 })
 
+test_that("searchDatabase validates query and limit inputs", {
+  expect_error(
+    CatMapR::searchDatabase(database = "SocioMap", query = "maybe"),
+    "`query` must be one of: true, false.",
+    fixed = TRUE
+  )
+
+  expect_error(
+    CatMapR::searchDatabase(database = "SocioMap", query = "false", limit = 0),
+    "`limit` must be a positive number.",
+    fixed = TRUE
+  )
+})
+
 test_that("translate uses /translate endpoint and includes options", {
   captured <- new.env(parent = emptyenv())
 
@@ -121,6 +143,21 @@ test_that("translate uses /translate endpoint and includes options", {
   expect_identical(captured$parameters$domain, "PERIOD")
   expect_identical(captured$parameters$countsamename, TRUE)
   expect_identical(captured$parameters$uniqueRows, TRUE)
+})
+
+test_that("translate validates key/query flags", {
+  input <- data.frame(period = "Archaic", stringsAsFactors = FALSE)
+
+  expect_error(
+    CatMapR::translate(
+      rows = input,
+      database = "ArchaMap",
+      term = "period",
+      key = "1"
+    ),
+    "`key` must be one of: true, false.",
+    fixed = TRUE
+  )
 })
 
 test_that("createLinkfile formats dataset choices for proposeMergeSubmit", {

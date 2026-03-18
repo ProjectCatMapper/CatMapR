@@ -48,8 +48,10 @@ It then processes the response and returns a list of dictionaries containing pro
 }
 \examples{
 
+\dontrun{
 categoryLabel <- c("ETHNICITY")
 datasetChoices <- c("SD5", "SD6")
 merged_data <- createLinkfile(categoryLabel, datasetChoices, equivalence = "standard")
+}
 
 }

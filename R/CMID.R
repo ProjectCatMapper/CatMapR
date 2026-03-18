@@ -10,9 +10,13 @@
 #'
 #' @export
 #' @examples
+#' \dontrun{
 #' CMIDinfo(database = "SocioMap", cmid = "SM1")
 #' CMIDinfo(database = "ArchaMap", cmid = "AM1")
+#' }
 CMIDinfo <- function(database, cmid) {
+  database <- validate_database(database)
+  cmid <- validate_scalar_character(cmid, "cmid")
 
   # New REST format: /CMID/<database>/<cmid>
   endpoint <- paste("CMID", database, cmid, sep = "/")

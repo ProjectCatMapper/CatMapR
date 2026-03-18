@@ -33,7 +33,18 @@ API response
 Helper function to call the CatMapper API.
 }
 \examples{
-CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+\dontrun{
+CatMapR:::callAPI(
+  endpoint = "search",
+  parameters = list(
+    term = "Dan",
+    database = "SocioMap",
+    property = "Name",
+    domain = "ETHNICITY"
+  ),
+  request = "GET"
+)
+}
 
 }
 \keyword{internal}

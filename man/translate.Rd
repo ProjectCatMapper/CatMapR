@@ -57,6 +57,19 @@ A list with \code{file} and \code{order} from the API.
 This function translate a dataframe by matching the specified term with the property in the database.
 }
 \examples{
+\dontrun{
 df = data.frame(country = "Afghanistan")
-translate(rows = df, database = "SocioMap",domain = "ADM0", term = "country", property = "Name", yearStart = NULL, yearEnd = NULL, country = NULL, context = NULL, query = 'false')
+translate(
+  rows = df,
+  database = "SocioMap",
+  domain = "ADM0",
+  term = "country",
+  property = "Name",
+  yearStart = NULL,
+  yearEnd = NULL,
+  country = NULL,
+  context = NULL,
+  query = "false"
+)
+}
 }

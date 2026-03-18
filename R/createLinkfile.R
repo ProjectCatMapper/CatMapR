@@ -23,9 +23,11 @@
 #'
 #' @examples
 #'
+#' \dontrun{
 #' categoryLabel <- c("ETHNICITY")
 #' datasetChoices <- c("SD5", "SD6")
 #' merged_data <- createLinkfile(categoryLabel, datasetChoices, equivalence = "standard")
+#' }
 #'
 createLinkfile <- function(categoryLabel,
                            datasetChoices,
@@ -35,13 +37,24 @@ createLinkfile <- function(categoryLabel,
                            mergelevel = 2,
                            resultFormat = "key-to-key",
                            selectedKeyvariable = list()) {
+  database <- validate_database(database)
+  equivalence <- validate_choice(equivalence, c("standard", "extended"), "equivalence")
+  resultFormat <- validate_choice(
+    resultFormat,
+    c("key-to-key", "key-to-category", "category-to-category"),
+    "resultFormat"
+  )
+  mergelevel <- validate_positive_integer(mergelevel, "mergelevel")
+
   if (length(datasetChoices) > 1) {
     datasetChoices <- paste(datasetChoices, collapse = ",")
   }
+  datasetChoices <- validate_scalar_character(datasetChoices, "datasetChoices")
 
   if (length(categoryLabel) > 1) {
     categoryLabel <- categoryLabel[1]
   }
+  categoryLabel <- validate_scalar_character(categoryLabel, "categoryLabel")
 
   # Prepare parameters for the API call
   params <- list(

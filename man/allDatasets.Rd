@@ -18,6 +18,8 @@ This function retrieves detailed information about all datasets from a specified
 It returns information such as dataset identifiers, names, applicable years, project details, and other relevant metadata.
 }
 \examples{
+\dontrun{
 allDatasets(database = "SocioMap")
 allDatasets(database = "ArchaMap")
+}
 }

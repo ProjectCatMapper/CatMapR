@@ -48,5 +48,7 @@ A list with \code{data} and \code{count} elements.
 Search for a term in a database and retrieve the CMID (CatMapperID), CMName (CatMapper Name), and other information about the matches.
 }
 \examples{
+\dontrun{
 searchDatabase(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
+}
 }

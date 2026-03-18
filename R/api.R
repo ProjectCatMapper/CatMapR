@@ -32,7 +32,18 @@ resolve_api_url <- function(url = NULL) {
 #' @return API response
 #'
 #' @examples
-#' CatMapR:::callAPI(endpoint = "search", parameters = list(term = "Dan", database = "SocioMap", property = "Name", domain = "ETHNICITY"), request = "GET")
+#' \dontrun{
+#' CatMapR:::callAPI(
+#'   endpoint = "search",
+#'   parameters = list(
+#'     term = "Dan",
+#'     database = "SocioMap",
+#'     property = "Name",
+#'     domain = "ETHNICITY"
+#'   ),
+#'   request = "GET"
+#' )
+#' }
 #'
 #' @keywords internal
 callAPI = function(endpoint,
@@ -42,6 +53,9 @@ callAPI = function(endpoint,
                      type = "default",
                      headers = NULL
 ) {
+  endpoint <- validate_scalar_character(endpoint, "endpoint")
+  request <- validate_choice(toupper(request), c("GET", "POST"), "request")
+  type <- validate_choice(type, c("default", "stream"), "type")
   url <- resolve_api_url(url)
   tictoc::tic("API call")
   httr::set_config(httr::config(ssl_verifypeer = 0L))
@@ -110,8 +124,6 @@ callAPI = function(endpoint,
         )
       } else if (type == "stream") {
         resultData = resultContent
-      } else {
-        resultData = "Error: must specify type as default or stream"
       }
     } else {
       resultData = resultContent

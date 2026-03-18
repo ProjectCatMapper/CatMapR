@@ -24,7 +24,9 @@ It retrieves translated keys from the database and returns the joined data with 
 The function requires a column named 'datasetID' in both datasets that has the CMID of the translated dataset. It also requires the columns used to create the 'Key' used in translation. For example, if the Key for the GADM dataset 'SD1' is 'GID: AFG', then the 'Key' column should be 'GID' in the dataset.
 }
 \examples{
+\dontrun{
 joinLeft = data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
 joinRight = data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
 joinDatasets("SocioMap", joinLeft, joinRight, domain = "CATEGORY")
+}
 }

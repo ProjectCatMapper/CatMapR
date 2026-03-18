@@ -1,0 +1,254 @@
+---
+title: "CatMapR End-to-End Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{CatMapR End-to-End Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE
+)
+
+run_live <- identical(tolower(Sys.getenv("CATMAPR_RUN_LIVE", "false")), "true")
+```
+
+## Overview
+
+CatMapper is a platform for organizing and harmonizing category systems across datasets.
+It currently includes two applications: **SocioMap**, which focuses on social-science
+categories (for example ethnicities, languages, religions, and administrative units),
+and **ArchaMap**, which focuses on archaeological categories (for example artifact
+types and cultural periods).
+CatMapR is an API wrapper for the CatMapper API, and all package functions are
+also available through the CatMapper web application at <https://catmapper.org>.
+
+This vignette shows a standard CatMapR workflow:
+
+1. list available datasets,
+2. search and inspect categories,
+3. translate external labels,
+4. run basic quality checks,
+5. join harmonized tables.
+
+By default, chunks run in offline demo mode for reproducible rendering.
+
+## Why Use CatMapper?
+
+Researchers often work with datasets that describe the same category systems
+in different and incompatible ways. CatMapper helps by:
+
+- identifying likely matches across naming variants and coding systems,
+- preserving context needed for disambiguation (for example place, domain, or period),
+- reducing manual harmonization effort before analysis,
+- making joins across independently structured datasets more reproducible.
+
+CatMapR provides these capabilities in scriptable R workflows, so translation,
+quality checks, and joins can be rerun consistently as data updates.
+
+## Setup
+
+```{r setup}
+library(CatMapR)
+
+# Optional API override:
+# Sys.setenv(CATMAPR_API_URL = "https://api.catmapper.org")
+
+run_live
+```
+
+## Candidate Dataset Pairings
+
+Suggested pairings for a worked example:
+
+- SocioMap ADM0: `SD1` (GADM 3.6) + `SD2` (GeoNames 202005)
+- SocioMap ETHNICITY: `SD2176` (GeoEPR 2021) + `SD461930` (LEDA)
+- SocioMap LANGUAGE: `SD3` (Glottolog 4.2.1) + `SD2196` (Wikidata)
+- ArchaMap artifact/period: `AD37767` (Andrefsky 2005) + `AD37770` (DAI_FeatureTypes)
+
+Dataset IDs above were confirmed on 2026-03-18 and may change as catalogs update.
+
+## 1) List Datasets
+
+```{r list-datasets}
+if (run_live) {
+  datasets <- allDatasets(database = "SocioMap")
+} else {
+  datasets <- data.frame(
+    CMID = c("SD1", "SD2", "SD2176", "SD461930"),
+    CMName = c("GADM 3.6", "GeoNames Version 202005", "GeoEPR 2021", "LEDA"),
+    ApplicableYears = c("2018", "2020", "1946-2021", NA),
+    stringsAsFactors = FALSE
+  )
+}
+
+head(datasets)
+```
+
+## 2) Search and Inspect a Category
+
+```{r search-inspect}
+if (run_live) {
+  hits <- searchDatabase(
+    database = "SocioMap",
+    domain = "ADM0",
+    term = "Ghana",
+    property = "Name"
+  )
+  details <- CMIDinfo(database = "SocioMap", cmid = "SM1")
+} else {
+  hits <- list(
+    count = 1,
+    data = data.frame(
+      CMID = "SM1",
+      CMName = "Ghana",
+      domain = "ADM0",
+      stringsAsFactors = FALSE
+    )
+  )
+  details <- list(node = list(CMID = "SM1", CMName = "Ghana", domain = "ADM0"))
+}
+
+hits
+str(details)
+```
+
+## 3) Prepare External Input
+
+```{r input-table}
+raw_df <- data.frame(
+  country_label = c("Ghana", "Cote dIvoire", "Tanzania"),
+  year = c(2019, 2019, 2019),
+  indicator_value = c(10.2, 9.7, 8.4),
+  stringsAsFactors = FALSE
+)
+
+raw_df
+```
+
+## 4) Translate Labels
+
+```{r translate}
+if (run_live) {
+  translated <- translate(
+    rows = raw_df,
+    database = "SocioMap",
+    domain = "ADM0",
+    term = "country_label",
+    property = "Name",
+    query = "false"
+  )
+} else {
+  translated <- list(
+    file = data.frame(
+      country_label = c("Ghana", "Cote dIvoire", "Tanzania"),
+      generated_CMID = c("SM1", "SM2", "SM3"),
+      generated_CMName = c("Ghana", "Cote d'Ivoire", "Tanzania"),
+      score = c(1, 1, 1),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+translated$file
+```
+
+## 5) Post-Translation Checks
+
+```{r checks}
+translated_df <- translated$file
+
+if (!is.data.frame(translated_df) || !"generated_CMID" %in% names(translated_df)) {
+  message("No `generated_CMID` column found in translation output; verify API output shape before QA checks.")
+} else {
+  # Rows without a CMID assignment
+  translated_df[is.na(translated_df$generated_CMID), , drop = FALSE]
+
+  # Simple duplicate check by assigned CMID
+  sort(table(translated_df$generated_CMID), decreasing = TRUE)
+}
+```
+
+## 6) Join Harmonized Tables
+
+```{r join}
+if (run_live) {
+  left_df <- data.frame(
+    datasetID = "SD1",
+    country = c("Ghana", "Tanzania"),
+    GID = c("GHA", "TZA"),
+    metric_left = c(10, 20),
+    stringsAsFactors = FALSE
+  )
+
+  right_df <- data.frame(
+    datasetID = "SD2",
+    country = c("Ghana", "Tanzania"),
+    geonameid = c("2300660", "149590"),
+    metric_right = c(2, 5),
+    stringsAsFactors = FALSE
+  )
+
+  joined <- joinDatasets(
+    database = "SocioMap",
+    joinLeft = left_df,
+    joinRight = right_df,
+    domain = "CATEGORY"
+  )
+} else {
+  joined <- data.frame(
+    generated_CMID = c("SM1", "SM3"),
+    left_metric = c(10, 20),
+    right_metric = c(2, 5),
+    stringsAsFactors = FALSE
+  )
+}
+
+joined
+```
+
+## Optional: Authenticated Upload Flow
+
+Write operations require an API key and are shown as a template only.
+
+```{r write-flow, eval = FALSE}
+upload_payload <- data.frame(
+  CMName = "Yoruba",
+  Name = "Yoruba",
+  Key = "eth:yoruba",
+  stringsAsFactors = FALSE
+)
+
+submitEditUpload(
+  df = upload_payload,
+  database = "SocioMap",
+  formData = list(
+    domain = "ETHNICITY",
+    subdomain = "ETHNICITY",
+    datasetID = "SD1",
+    cmNameColumn = "CMName",
+    categoryNamesColumn = "Name",
+    cmidColumn = "CMID",
+    keyColumn = "Key"
+  ),
+  so = "simple",
+  ao = "add_uses",
+  api_key = Sys.getenv("CATMAPR_API_KEY")
+)
+```
+
+## Reproducibility
+
+- Default mode: `CATMAPR_RUN_LIVE=false` (or unset).
+- Live mode:
+
+```{r live-mode, eval = FALSE}
+Sys.setenv(CATMAPR_RUN_LIVE = "true")
+```
+
+CatMapR release policy targets backward-compatible behavior for exported functions and called API endpoints within the `0.1.x` line.
