@@ -8,3 +8,5 @@
 - Added central input-validation helpers and wired them into exported API
   wrappers for clearer error messages and safer inputs.
 - Added tests covering new validation behavior.
+- Added an API stability contract to freeze the `0.1.x` public interface.
+- Added CRAN submission comments draft (`cran-comments.md`).

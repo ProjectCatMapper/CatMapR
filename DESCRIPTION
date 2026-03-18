@@ -11,7 +11,9 @@ Description: Provides wrappers for the CatMapper API
     dataset discovery, category search, translation workflows, and selected
     authenticated upload operations for SocioMap and ArchaMap.
 License: GPL-3
-URL: https://catmapper.org, https://github.com/ProjectCatMapper/CatMapR
+URL: https://projectcatmapper.github.io/CatMapR/,
+    https://catmapper.org,
+    https://github.com/ProjectCatMapper/CatMapR
 BugReports: https://github.com/ProjectCatMapper/CatMapR/issues
 Encoding: UTF-8
 LazyData: true
