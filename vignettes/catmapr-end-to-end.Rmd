@@ -64,12 +64,16 @@ User-owned/raw datasets are external inputs to your R workflow.
 
 ## UI-to-R Function Mapping
 
+Route placeholder note[^database-route].
+
 | CatMapperJS route | Typical UI step | CatMapR function(s) |
 | --- | --- | --- |
 | `/:database/explore` | Search categories/entities and inspect details | `searchDatabase()`, `CMIDinfo()` |
 | `/:database/translate` | Upload labels, run matching, review translated outputs | `translate()` |
 | `/:database/merge` | Propose merge keys and join aligned datasets | `createLinkfile()`, `joinDatasets()` |
 | `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+
+[^database-route]: In routes like `/:database/explore`, `:database` means the app path segment, typically `sociomap` or `archamap` (for example `/sociomap/explore`).
 
 ## UI Workflow Crosswalk (Detailed)
 

@@ -55,12 +55,16 @@ The **CatMapR** package includes the following main functions:
 
 ### UI-to-R Function Mapping
 
+Route placeholder note[^database-route].
+
 | CatMapperJS route | UI workflow | CatMapR functions |
 | --- | --- | --- |
 | `/:database/explore` | Search and inspect entities/categories | `searchDatabase()`, `CMIDinfo()` |
 | `/:database/translate` | Translate labels and review proposed matches | `translate()` |
 | `/:database/merge` | Propose key mappings and join aligned tables | `createLinkfile()`, `joinDatasets()` |
 | `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+
+[^database-route]: In routes like `/:database/explore`, `:database` means the app path segment, typically `sociomap` or `archamap` (for example `/sociomap/explore`).
 
 ## Usage
 
@@ -82,6 +86,7 @@ Write endpoints (for example uploads) require a valid API key from a registered 
 Sys.setenv(CATMAPR_API_KEY = "cmk_your_api_key")
 ```
 
+- How to get an API key: https://catmapper.org/help/API.html#api-key-access
 - For write calls, CatMapper identifies the acting user from the API key on the server side.
 - Server-side permissions determine whether that user can run the requested write action.
 - CatMapR does not implement username/password login flows; it sends API-key-authenticated requests to the API.
