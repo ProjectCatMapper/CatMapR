@@ -27,6 +27,27 @@ test_that("allDatasets validates database values", {
   )
 })
 
+test_that("listDatasetMetadata is a behavior-compatible alias of allDatasets", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::listDatasetMetadata(database = "SocioMap")
+
+  expect_equal(result, list(ok = TRUE))
+  expect_identical(captured$endpoint, "allDatasets")
+  expect_identical(captured$request, "GET")
+  expect_identical(captured$parameters, list(database = "SocioMap"))
+})
+
 test_that("datasetInfo includes domain and children parameters", {
   captured <- new.env(parent = emptyenv())
 
@@ -41,6 +62,35 @@ test_that("datasetInfo includes domain and children parameters", {
   )
 
   result <- CatMapR::datasetInfo(
+    database = "ArchaMap",
+    CMID = "AD1",
+    domain = "CATEGORY",
+    children = TRUE
+  )
+
+  expect_equal(result, list(ok = TRUE))
+  expect_identical(captured$endpoint, "dataset")
+  expect_identical(captured$request, "GET")
+  expect_identical(
+    captured$parameters,
+    list(database = "ArchaMap", cmid = "AD1", domain = "CATEGORY", children = TRUE)
+  )
+})
+
+test_that("getDatasetMetadata is a behavior-compatible alias of datasetInfo", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDatasetMetadata(
     database = "ArchaMap",
     CMID = "AD1",
     domain = "CATEGORY",

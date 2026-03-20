@@ -35,7 +35,8 @@ submitEditUpload(
 
 \item{mergingType}{Optional merging mode used by merge upload workflows.}
 
-\item{api_key}{API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.}
+\item{api_key}{API key used for authenticated write actions. If \code{NULL},
+\code{CATMAPR_API_KEY} is used.}
 
 \item{refresh_waiting_uses}{If \code{TRUE}, call \code{updateWaitingUSES} after upload.}
 
@@ -47,6 +48,8 @@ Named list with \code{upload} and \code{waiting_uses} elements.
 \description{
 Convenience wrapper that executes the same two-step flow as the CatMapperJS
 edit page: first \code{/uploadInputNodes}, then \code{/updateWaitingUSES}.
+This write flow requires a valid API key tied to a registered CatMapper
+account, and permissions are enforced by the server.
 }
 \examples{
 \dontrun{

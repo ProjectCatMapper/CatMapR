@@ -30,7 +30,7 @@ also available through the CatMapper web application at <https://catmapper.org>.
 
 This vignette shows a standard CatMapR workflow:
 
-1. list available datasets,
+1. list available dataset metadata,
 2. search and inspect categories,
 3. translate external labels,
 4. run basic quality checks,
@@ -50,6 +50,38 @@ in different and incompatible ways. CatMapper helps by:
 
 CatMapR provides these capabilities in scriptable R workflows, so translation,
 quality checks, and joins can be rerun consistently as data updates.
+
+## What CatMapR Returns
+
+CatMapR wrappers return CatMapper API responses, including:
+
+- dataset catalog metadata (for example CMID, CMName, citation fields, years),
+- category/entity metadata and relationship details,
+- translation and join outputs.
+
+CatMapR does **not** fetch raw dataset source files managed outside CatMapper.
+User-owned/raw datasets are external inputs to your R workflow.
+
+## UI-to-R Function Mapping
+
+| CatMapperJS route | Typical UI step | CatMapR function(s) |
+| --- | --- | --- |
+| `/:database/explore` | Search categories/entities and inspect details | `searchDatabase()`, `CMIDinfo()` |
+| `/:database/translate` | Upload labels, run matching, review translated outputs | `translate()` |
+| `/:database/merge` | Propose merge keys and join aligned datasets | `createLinkfile()`, `joinDatasets()` |
+| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+
+## UI Workflow Crosswalk (Detailed)
+
+| User intent | CatMapper UI path | UI action | CatMapR call pattern |
+| --- | --- | --- | --- |
+| Browse available dataset records | `/:database` and `/:database/explore` | Open database and review dataset catalog entries | `listDatasetMetadata(database)` (legacy: `allDatasets(database)`) |
+| Inspect one known dataset CMID | `/:database/:cmid` | Open dataset info page | `getDatasetMetadata(database, CMID, domain, children)` (legacy: `datasetInfo(...)`) |
+| Find entities/categories | `/:database/explore` | Run search filters and inspect hits | `searchDatabase(...)`, then `CMIDinfo(...)` |
+| Harmonize labels | `/:database/translate` | Upload table and run translation | `translate(rows, database, term, ...)` |
+| Build merge candidates | `/:database/merge` | Propose merge linkfile | `createLinkfile(categoryLabel, datasetChoices, ...)` |
+| Join aligned sources | `/:database/merge` | Run join on matched keys | `joinDatasets(database, joinLeft, joinRight, ...)` |
+| Submit metadata/category edits | `/:database/edit` | Upload edit rows and refresh USES | `submitEditUpload(...)` or `uploadInputNodes(...)` + `updateWaitingUSES(...)` |
 
 ## Setup
 
@@ -77,7 +109,7 @@ Dataset IDs above were confirmed on 2026-03-18 and may change as catalogs update
 
 ```{r list-datasets}
 if (run_live) {
-  datasets <- allDatasets(database = "SocioMap")
+  datasets <- listDatasetMetadata(database = "SocioMap")
 } else {
   datasets <- data.frame(
     CMID = c("SD1", "SD2", "SD2176", "SD461930"),
@@ -214,7 +246,10 @@ joined
 
 ## Optional: Authenticated Upload Flow
 
-Write operations require an API key and are shown as a template only.
+Write operations require a valid API key tied to a registered CatMapper
+account and are shown as a template only. The server identifies the acting
+user from the API key and enforces permissions for write endpoints.
+CatMapR does not manage username/password login flows.
 
 ```{r write-flow, eval = FALSE}
 upload_payload <- data.frame(

@@ -18,7 +18,7 @@ Current expected NOTE at submission time:
 
 ## Notes
 
-CatMapR provides an R interface to CatMapper API endpoints for dataset discovery,
+CatMapR provides an R interface to CatMapper API endpoints for dataset metadata discovery,
 search, translation, and controlled upload/update workflows.
 
 Win-builder:

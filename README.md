@@ -9,11 +9,11 @@
 </p>
 
 
-**CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to datasets, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research.
+**CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to dataset catalog metadata, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research.
 
 This package allows users to:
 
-* Retrieve datasets and associated metadata from CatMapper databases.
+* Retrieve dataset catalog metadata from CatMapper databases.
 * Search for specific categories or entities and obtain detailed information.
 * Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
 * Create and join datasets across different domains for integrated analysis.
@@ -34,17 +34,33 @@ remotes::install_github("projectCatMapper/CatMapR")
 
 The **CatMapR** package includes the following main functions:
 
-- **`allDatasets`**: Retrieves all datasets from a specified database (`SocioMap` or `ArchaMap`).
+- **`listDatasetMetadata`**: Preferred alias for listing dataset catalog metadata in a specified database (`SocioMap` or `ArchaMap`).
+- **`allDatasets`**: Legacy-compatible name for `listDatasetMetadata()`.
 - **`callAPI`**: Helper function for calling the CatMapper API with specified parameters.
 - **`CMIDinfo`**: Fetches details about a specific entity by CatMapper ID (CMID).
 - **`createLinkfile`**: Proposes and returns a merge of datasets based on a category domain and specified datasets.
-- **`datasetInfo`**: Retrieves information about a dataset based on a given CMID, with optional filtering by domain.
+- **`getDatasetMetadata`**: Preferred alias for retrieving metadata for a dataset CMID.
+- **`datasetInfo`**: Legacy-compatible name for `getDatasetMetadata()`.
 - **`joinDatasets`**: Joins two datasets based on specified parameters, returning the joined data with translated keys.
 - **`searchDatabase`**: Searches for terms within a database, allowing filtering by domain, property, year, and context.
 - **`translate`**: Translates terms within datasets by matching specified properties and domains, facilitating category consistency across data sources.
 - **`uploadInputNodes`**: Uploads edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required).
 - **`updateWaitingUSES`**: Triggers `/updateWaitingUSES` after uploads (write operation; API key required).
 - **`submitEditUpload`**: Runs the same two-step flow as the CatMapperJS edit page: upload, then waiting-USES refresh.
+
+### What CatMapR Returns
+
+- **Returns metadata and API responses**, including dataset catalog fields (for example CMID, CMName, citations, relationships), category matches, and translation/join outputs.
+- **Does not download dataset source files** managed outside CatMapper. User-owned raw datasets remain external inputs to your R workflow.
+
+### UI-to-R Function Mapping
+
+| CatMapperJS route | UI workflow | CatMapR functions |
+| --- | --- | --- |
+| `/:database/explore` | Search and inspect entities/categories | `searchDatabase()`, `CMIDinfo()` |
+| `/:database/translate` | Translate labels and review proposed matches | `translate()` |
+| `/:database/merge` | Propose key mappings and join aligned tables | `createLinkfile()`, `joinDatasets()` |
+| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
 
 ## Usage
 
@@ -58,22 +74,40 @@ Set `CATMAPR_API_URL` to point to a different CatMapper API deployment:
 Sys.setenv(CATMAPR_API_URL = "https://api.catmapper.org")
 ```
 
-### Configure API Key for Write Operations
+### Write Access and Authentication
 
-Write endpoints (for example uploads) require an API key:
+Write endpoints (for example uploads) require a valid API key from a registered CatMapper account:
 
 ```r
 Sys.setenv(CATMAPR_API_KEY = "cmk_your_api_key")
 ```
 
-For write calls, CatMapper identifies the acting user from the API key on the server side.
+- For write calls, CatMapper identifies the acting user from the API key on the server side.
+- Server-side permissions determine whether that user can run the requested write action.
+- CatMapR does not implement username/password login flows; it sends API-key-authenticated requests to the API.
 
-### Retrieve All Datasets
+### Retrieve Dataset Catalog Metadata
 
 ```r
-# Retrieve all datasets from the SocioMap database
-all_datasets <- allDatasets(database = "SocioMap")
-print(all_datasets)
+# Preferred metadata-focused alias
+dataset_catalog <- listDatasetMetadata(database = "SocioMap")
+print(dataset_catalog)
+
+# Legacy equivalent
+# all_datasets <- allDatasets(database = "SocioMap")
+# print(all_datasets)
+```
+
+### Retrieve Metadata for a Dataset CMID
+
+```r
+# Preferred metadata-focused alias
+dataset_meta <- getDatasetMetadata(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
+print(dataset_meta)
+
+# Legacy equivalent
+# dataset_meta <- datasetInfo(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
+# print(dataset_meta)
 ```
 
 ### Retrieve Details for a Specific CMID

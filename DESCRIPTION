@@ -8,7 +8,7 @@ Description: Provides wrappers for the CatMapper API
     <https://catmapper.org>. CatMapper organizes category systems used in
     social science and archaeology, including ethnicities, languages,
     religions, districts, and material-culture classes. The package supports
-    dataset discovery, category search, translation workflows, and selected
+    dataset metadata discovery, category search, translation workflows, and selected
     authenticated upload operations for SocioMap and ArchaMap.
 License: GPL-3
 URL: https://projectcatmapper.github.io/CatMapR/,

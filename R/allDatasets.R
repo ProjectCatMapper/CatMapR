@@ -1,12 +1,15 @@
-#' Retrieve All Datasets from a Specified Database
+#' Retrieve Dataset Catalog Metadata from a Specified Database
 #'
-#' This function retrieves detailed information about all datasets from a specified database.
-#' It returns information such as dataset identifiers, names, applicable years, project details, and other relevant metadata.
+#' This function retrieves dataset catalog metadata from a specified database.
+#' It returns information such as dataset identifiers, names, applicable years,
+#' project details, and related metadata fields.
 #'
 #' @param database A string specifying the database from which to retrieve datasets. Valid options are "SocioMap" or "ArchaMap".
 #'
-#' @return A list containing detailed information about each dataset, or an error message if the request fails.
-#' The list includes fields such as nodeID, CMName, CMID, shortName, project, Unit, parent, ApplicableYears, and more.
+#' @return A list containing metadata records for each dataset, or an error message if the request fails.
+#' The list typically includes fields such as nodeID, CMName, CMID, shortName,
+#' project, Unit, parent, ApplicableYears, and more. This function returns
+#' metadata records, not raw dataset files.
 #'
 #' @export
 #' @examples

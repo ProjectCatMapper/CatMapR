@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{datasetInfo}
 \alias{datasetInfo}
-\title{Retrieve Dataset Information by CMID}
+\title{Retrieve Dataset Metadata by CMID}
 \usage{
 datasetInfo(database, CMID, domain = "CATEGORY", children = NULL)
 }
@@ -16,11 +16,14 @@ datasetInfo(database, CMID, domain = "CATEGORY", children = NULL)
 \item{children}{(Optional) If TRUE, include child datasets in the query.}
 }
 \value{
-A list containing detailed information about the dataset, or an error message if the request fails.
+A list containing dataset metadata details, or an error message if the
+request fails. This function returns metadata records, not raw dataset files.
 }
 \description{
-This function retrieves detailed information about a dataset based on a given CMID (CatMapperID) from a specified database, with an optional domain filter.
-It fetches relationships and properties of datasets associated with the specified CMID.
+This function retrieves dataset metadata based on a given CMID (CatMapperID)
+from a specified database, with an optional domain filter.
+It fetches dataset relationships and metadata properties associated with the
+specified CMID.
 }
 \examples{
 \dontrun{

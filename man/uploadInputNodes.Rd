@@ -34,7 +34,8 @@ uploadInputNodes(
 
 \item{mergingType}{Optional merging mode used by merge upload workflows.}
 
-\item{api_key}{API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.}
+\item{api_key}{API key used for authenticated write actions. If \code{NULL},
+\code{CATMAPR_API_KEY} is used.}
 
 \item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.}
 }
@@ -43,7 +44,15 @@ Parsed API response.
 }
 \description{
 Mirrors the CatMapperJS edit-page upload call to \code{/uploadInputNodes}.
-This wrapper is intended for write operations and requires an API key.
+This wrapper is intended for write operations and requires a valid API key
+tied to a registered CatMapper account.
+Server-side permissions determine whether the authenticated user can perform
+the requested write action.
+}
+\details{
+CatMapR does not manage username/password login flows. It sends
+API-key-authenticated requests and the CatMapper API identifies the acting
+user on the server side.
 }
 \examples{
 \dontrun{

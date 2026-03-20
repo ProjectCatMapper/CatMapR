@@ -1,7 +1,10 @@
 #' Upload Edit-Page Rows to CatMapper
 #'
 #' Mirrors the CatMapperJS edit-page upload call to \code{/uploadInputNodes}.
-#' This wrapper is intended for write operations and requires an API key.
+#' This wrapper is intended for write operations and requires a valid API key
+#' tied to a registered CatMapper account.
+#' Server-side permissions determine whether the authenticated user can perform
+#' the requested write action.
 #'
 #' @param df Data frame or list of row objects to upload.
 #' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
@@ -11,10 +14,14 @@
 #' @param addoptions Named list with \code{district} and \code{recordyear} booleans.
 #' @param allContext Optional vector/list of contextual columns.
 #' @param mergingType Optional merging mode used by merge upload workflows.
-#' @param api_key API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.
+#' @param api_key API key used for authenticated write actions. If \code{NULL},
+#'   \code{CATMAPR_API_KEY} is used.
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
+#' @details CatMapR does not manage username/password login flows. It sends
+#'   API-key-authenticated requests and the CatMapper API identifies the acting
+#'   user on the server side.
 #' @export
 #'
 #' @examples
@@ -81,13 +88,20 @@ uploadInputNodes <- function(df,
 #' Refresh Waiting USES Queue
 #'
 #' Mirrors the post-upload CatMapperJS edit-page call to \code{/updateWaitingUSES}.
-#' This wrapper is intended for write operations and requires an API key.
+#' This wrapper is intended for write operations and requires a valid API key
+#' tied to a registered CatMapper account.
+#' Server-side permissions determine whether the authenticated user can perform
+#' the requested write action.
 #'
 #' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
-#' @param api_key API key used for authenticated write actions. If \code{NULL}, \code{CATMAPR_API_KEY} is used.
+#' @param api_key API key used for authenticated write actions. If \code{NULL},
+#'   \code{CATMAPR_API_KEY} is used.
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
+#' @details CatMapR does not manage username/password login flows. It sends
+#'   API-key-authenticated requests and the CatMapper API identifies the acting
+#'   user on the server side.
 #' @export
 #'
 #' @examples
@@ -119,6 +133,8 @@ updateWaitingUSES <- function(database,
 #'
 #' Convenience wrapper that executes the same two-step flow as the CatMapperJS
 #' edit page: first \code{/uploadInputNodes}, then \code{/updateWaitingUSES}.
+#' This write flow requires a valid API key tied to a registered CatMapper
+#' account, and permissions are enforced by the server.
 #'
 #' @inheritParams uploadInputNodes
 #' @param refresh_waiting_uses If \code{TRUE}, call \code{updateWaitingUSES} after upload.
@@ -199,7 +215,9 @@ resolve_api_key <- function(api_key = NULL) {
     return(env_key)
   }
 
-  stop("An API key is required for write operations. Set `api_key` or CATMAPR_API_KEY.")
+  stop(
+    "An API key is required for write operations from a registered CatMapper account. Set `api_key` or CATMAPR_API_KEY."
+  )
 }
 
 build_api_key_headers <- function(api_key) {

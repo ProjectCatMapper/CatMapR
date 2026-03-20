@@ -2,7 +2,7 @@
 % Please edit documentation in R/allDatasets.R
 \name{allDatasets}
 \alias{allDatasets}
-\title{Retrieve All Datasets from a Specified Database}
+\title{Retrieve Dataset Catalog Metadata from a Specified Database}
 \usage{
 allDatasets(database)
 }
@@ -10,12 +10,15 @@ allDatasets(database)
 \item{database}{A string specifying the database from which to retrieve datasets. Valid options are "SocioMap" or "ArchaMap".}
 }
 \value{
-A list containing detailed information about each dataset, or an error message if the request fails.
-The list includes fields such as nodeID, CMName, CMID, shortName, project, Unit, parent, ApplicableYears, and more.
+A list containing metadata records for each dataset, or an error message if the request fails.
+The list typically includes fields such as nodeID, CMName, CMID, shortName,
+project, Unit, parent, ApplicableYears, and more. This function returns
+metadata records, not raw dataset files.
 }
 \description{
-This function retrieves detailed information about all datasets from a specified database.
-It returns information such as dataset identifiers, names, applicable years, project details, and other relevant metadata.
+This function retrieves dataset catalog metadata from a specified database.
+It returns information such as dataset identifiers, names, applicable years,
+project details, and related metadata fields.
 }
 \examples{
 \dontrun{
