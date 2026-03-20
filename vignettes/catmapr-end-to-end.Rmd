@@ -64,7 +64,7 @@ User-owned/raw datasets are external inputs to your R workflow.
 
 ## UI-to-R Function Mapping
 
-* In routes like `/:database/explore`, `:database` means the app path segment, typically `sociomap` or `archamap` (for example `/sociomap/explore`).
+* In routes like `/:database/explore`, `:database` means the app path segment, `sociomap` or `archamap` (for example `/sociomap/explore`).
 
 | CatMapperJS route | Typical UI step | CatMapR function(s) |
 | --- | --- | --- |

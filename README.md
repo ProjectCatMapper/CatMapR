@@ -55,7 +55,7 @@ The **CatMapR** package includes the following main functions:
 
 ### UI-to-R Function Mapping
 
-* In routes like `/:database/explore`, `:database` means the app path segment, typically `sociomap` or `archamap` (for example `/sociomap/explore`).
+* In routes like `/:database/explore`, `:database` means the app path segment, `sociomap` or `archamap` (for example `/sociomap/explore`).
 
 | CatMapperJS route | UI workflow | CatMapR functions |
 | --- | --- | --- |
