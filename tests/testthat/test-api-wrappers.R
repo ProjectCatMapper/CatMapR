@@ -320,6 +320,79 @@ test_that("CMIDinfo uses REST-style CMID/database/cmid endpoint", {
   expect_identical(captured$parameters, list())
 })
 
+test_that("getDomains returns simplified domain metadata by default", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(
+        list(group = "DISTRICT", nodes = list(c("ADM0", "ADM1")), description = "Administrative district"),
+        list(group = "ETHNICITY", nodes = list("ETHNICITY"), description = "Ethnicity category")
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDomains(database = "SocioMap")
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoint, "getTranslatedomains")
+  expect_identical(captured$request, "GET")
+  expect_identical(captured$parameters, list(database = "SocioMap"))
+  expect_identical(names(result), c("domain", "subdomain", "description"))
+  expect_identical(result$domain, c("DISTRICT", "DISTRICT", "ETHNICITY"))
+  expect_identical(result$subdomain, c("ADM0", "ADM1", "ETHNICITY"))
+  expect_identical(
+    result$description,
+    c("Administrative district", "Administrative district", "Ethnicity category")
+  )
+})
+
+test_that("getDomains returns richer metadata when advanced is TRUE", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      data.frame(
+        group = c("DISTRICT", "LANGUOID"),
+        nodes = I(list(c("ADM0", "ADM1"), c("LANGUAGE", "DIALECT"))),
+        description = c("Administrative district", "Language grouping"),
+        public = c(TRUE, FALSE),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDomains(database = "SocioMap", advanced = TRUE)
+
+  expect_true(all(c("domain", "subdomain", "description", "public") %in% names(result)))
+  expect_identical(result$domain, c("DISTRICT", "DISTRICT", "LANGUOID", "LANGUOID"))
+  expect_identical(result$subdomain, c("ADM0", "ADM1", "LANGUAGE", "DIALECT"))
+  expect_identical(result$public, c(TRUE, TRUE, FALSE, FALSE))
+})
+
+test_that("getDomains adds missing descriptions and validates advanced", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(list(group = "DISTRICT", nodes = list(c("ADM0", "ADM1"))))
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDomains(database = "SocioMap")
+
+  expect_identical(names(result), c("domain", "subdomain", "description"))
+  expect_true(all(is.na(result$description)))
+
+  expect_error(
+    CatMapR::getDomains(database = "SocioMap", advanced = NA),
+    "`advanced` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
 test_that("uploadInputNodes requires API key", {
   original <- Sys.getenv("CATMAPR_API_KEY", unset = NA_character_)
   on.exit({
