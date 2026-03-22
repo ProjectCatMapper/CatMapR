@@ -1,25 +1,47 @@
 # CatMapR API Stability Contract
 
-Effective date: 2026-03-18
+Effective date: 2026-03-22
 
 ## Purpose
-This document defines the stability commitments for CatMapR's first CRAN-oriented release line.
+This document defines the stability commitments for CatMapR's current public interface.
 
-## Public R Interface Freeze (CatMapR 0.1.x)
-The following exported functions are considered stable and must not receive breaking signature changes in the `0.1.x` line:
+## Stable Public R Interface
+The following exported functions are considered stable and should not receive breaking signature changes within the current minor release line without a migration path:
 
-- `CMIDinfo()`
+### Dataset metadata
+- `listDatasetMetadata()`
 - `allDatasets()`
-- `createLinkfile()`
+- `getDatasetMetadata()`
 - `datasetInfo()`
-- `joinDatasets()`
+
+### Search and translation
+- `CMIDinfo()`
 - `searchDatabase()`
 - `translate()`
+
+### Merge and join
+- `createLinkfile()`
+- `joinDatasets()`
+
+### Edit/upload
 - `uploadInputNodes()`
 - `updateWaitingUSES()`
 - `submitEditUpload()`
 
-### Freeze Rules
+### Metadata introspection
+- `getDomains()`
+- `getUploadProperties()`
+
+## Experimental / rollout-dependent interface
+The following exported function is public but depends on deployment support that may lag behind package releases:
+
+- `getProperties()`
+
+Current expectation:
+- `getProperties()` should target API deployments exposing `GET /metadata/properties/<database>`.
+- Until all production deployments expose that route, callers may need to point `CATMAPR_API_URL` (or `url`) at a deployment that has it.
+
+## Freeze Rules
 - Do not remove or rename exported functions.
 - Do not rename existing arguments.
 - Do not change argument semantics in a way that breaks valid existing calls.
@@ -33,6 +55,9 @@ CatMapR currently calls these API endpoints. Breaking changes to these endpoints
 - `GET /allDatasets`
 - `GET /dataset`
 - `GET /search`
+- `GET /getTranslatedomains`
+- `GET /metadata/uploadProperties/<database>`
+- `GET /metadata/properties/<database>`
 - `POST /translate`
 - `POST /joinDatasets`
 - `POST /proposeMergeSubmit`

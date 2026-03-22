@@ -1,7 +1,7 @@
 #' Retrieve Property Metadata from a Specified Database
 #'
-#' This function retrieves flattened CatMapper property metadata from the
-#' canonical CatMapper API endpoint for a specified database. The result is a
+#' This function retrieves flattened CatMapper property metadata from API
+#' deployments that expose `/metadata/properties/<database>`. The result is a
 #' data frame with one row per property-field/value pair from `PROPERTY` nodes.
 #'
 #' @param database A string specifying the database from which to retrieve property metadata. Valid options are `"SocioMap"` or `"ArchaMap"`.

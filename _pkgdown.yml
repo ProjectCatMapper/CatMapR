@@ -12,8 +12,34 @@ navbar:
     left: [reference, articles, news]
     right: [github]
 
+reference:
+  - title: Dataset metadata
+    contents:
+      - listDatasetMetadata
+      - allDatasets
+      - getDatasetMetadata
+      - datasetInfo
+  - title: Search and translation
+    contents:
+      - CMIDinfo
+      - searchDatabase
+      - translate
+  - title: Merge and join
+    contents:
+      - createLinkfile
+      - joinDatasets
+  - title: Edit and upload
+    contents:
+      - uploadInputNodes
+      - updateWaitingUSES
+      - submitEditUpload
+  - title: Metadata introspection
+    contents:
+      - getDomains
+      - getUploadProperties
+      - getProperties
+
 articles:
   - title: Vignettes
     contents:
       - catmapr-end-to-end
-

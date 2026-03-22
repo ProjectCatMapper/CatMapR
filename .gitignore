@@ -5,3 +5,5 @@
 CatMapR.Rcheck/
 .tmp-lib/
 CatMapR_*.tar.gz
+vignettes/*.html
+vignettes/*.pdf

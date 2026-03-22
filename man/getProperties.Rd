@@ -16,8 +16,8 @@ A data frame containing flattened property metadata. Typical columns
 include \code{nodeID}, \code{CMName}, \code{property}, and \code{value}.
 }
 \description{
-This function retrieves flattened CatMapper property metadata from the
-canonical CatMapper API endpoint for a specified database. The result is a
+This function retrieves flattened CatMapper property metadata from API
+deployments that expose \verb{/metadata/properties/<database>}. The result is a
 data frame with one row per property-field/value pair from \code{PROPERTY} nodes.
 }
 \examples{

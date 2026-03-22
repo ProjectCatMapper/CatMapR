@@ -9,3 +9,4 @@
 ^API_STABILITY_CONTRACT\.md$
 ^_pkgdown\.yml$
 ^cran-comments\.md$
+^vignettes/.*\.(html|pdf)$

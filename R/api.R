@@ -58,7 +58,6 @@ callAPI = function(endpoint,
   type <- validate_choice(type, c("default", "stream"), "type")
   url <- resolve_api_url(url)
   tictoc::tic("API call")
-  httr::set_config(httr::config(ssl_verifypeer = 0L))
   request_headers <- NULL
   if (!is.null(headers) && length(headers) > 0) {
     headers <- headers[!vapply(headers, is.null, logical(1))]
