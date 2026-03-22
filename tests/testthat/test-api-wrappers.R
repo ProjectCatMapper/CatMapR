@@ -393,6 +393,128 @@ test_that("getDomains adds missing descriptions and validates advanced", {
   )
 })
 
+test_that("getProperties calls canonical properties endpoint and returns table", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      list(
+        database = "archamap",
+        table = list(
+          list(nodeID = "CP1", CMName = "country", property = "CMName", value = "country"),
+          list(nodeID = "CP1", CMName = "country", property = "type", value = "relationship")
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getProperties(database = "ArchaMap")
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoint, "metadata/properties/archamap")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+  expect_identical(names(result), c("nodeID", "CMName", "property", "value"))
+  expect_identical(result$CMName, c("country", "country"))
+  expect_identical(result$property, c("CMName", "type"))
+})
+
+test_that("getProperties handles empty or bare table responses", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(database = "sociomap", table = list())
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getProperties(database = "SocioMap")
+  expect_s3_class(result, "data.frame")
+  expect_identical(names(result), c("nodeID", "CMName", "property", "value"))
+  expect_identical(nrow(result), 0L)
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(nodeID = "CP2", CMName = "yearStart", property = "property", value = "yearStart")
+    },
+    .package = "CatMapR"
+  )
+
+  bare <- CatMapR::getProperties(database = "SocioMap")
+  expect_identical(nrow(bare), 1L)
+  expect_identical(bare$CMName, "yearStart")
+})
+
+test_that("getUploadProperties calls canonical upload properties endpoint", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      list(
+        database = "archamap",
+        nodeProperties = list(
+          list(property = "DatasetCitation", description = "Dataset citation")
+        ),
+        usesProperties = list(
+          list(property = "yearStart", description = "Starting date")
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getUploadProperties(database = "ArchaMap")
+
+  expect_type(result, "list")
+  expect_identical(captured$endpoint, "metadata/uploadProperties/archamap")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+  expect_identical(result$database, "archamap")
+  expect_s3_class(result$nodeProperties, "data.frame")
+  expect_s3_class(result$usesProperties, "data.frame")
+  expect_identical(result$nodeProperties$property, "DatasetCitation")
+  expect_identical(result$usesProperties$property, "yearStart")
+})
+
+test_that("getUploadProperties fills missing descriptions and defaults database", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(
+        nodeProperties = list(list(property = "shortName")),
+        usesProperties = list()
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getUploadProperties(database = "SocioMap")
+
+  expect_identical(result$database, "SocioMap")
+  expect_true(all(c("property", "description") %in% names(result$nodeProperties)))
+  expect_true(is.na(result$nodeProperties$description[[1]]))
+  expect_identical(nrow(result$usesProperties), 0L)
+})
+
+test_that("property wrappers surface API errors cleanly", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(error = "Not Found")
+    },
+    .package = "CatMapR"
+  )
+
+  expect_error(CatMapR::getProperties(database = "ArchaMap"), "Not Found", fixed = TRUE)
+  expect_error(CatMapR::getUploadProperties(database = "ArchaMap"), "Not Found", fixed = TRUE)
+})
+
 test_that("uploadInputNodes requires API key", {
   original <- Sys.getenv("CATMAPR_API_KEY", unset = NA_character_)
   on.exit({
