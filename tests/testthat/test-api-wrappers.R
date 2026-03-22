@@ -106,6 +106,14 @@ test_that("getDatasetMetadata is a behavior-compatible alias of datasetInfo", {
   )
 })
 
+test_that("datasetInfo validates optional scalar children", {
+  expect_error(
+    CatMapR::datasetInfo(database = "SocioMap", CMID = "SD1", children = c(TRUE, FALSE)),
+    "`children` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
 test_that("searchDatabase forwards modern search parameters", {
   captured <- new.env(parent = emptyenv())
 
@@ -242,6 +250,19 @@ test_that("createLinkfile formats dataset choices for proposeMergeSubmit", {
   expect_identical(captured$parameters$equivalence, "standard")
 })
 
+test_that("createLinkfile validates logical intersection", {
+  expect_error(
+    CatMapR::createLinkfile(
+      categoryLabel = "ETHNICITY",
+      datasetChoices = c("SD5", "SD6"),
+      database = "SocioMap",
+      intersection = NA
+    ),
+    "`intersection` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
 test_that("joinDatasets includes domain in post payload", {
   captured <- new.env(parent = emptyenv())
 
@@ -296,6 +317,35 @@ test_that("CATMAPR_API_URL controls default API URL resolution", {
   expect_identical(
     CatMapR:::resolve_api_url("https://override.example.org/api"),
     "https://override.example.org/api"
+  )
+})
+
+test_that("callAPI accepts 2xx responses and surfaces non-2xx errors", {
+  local_mocked_bindings(
+    GET = function(url, query = NULL, ...) {
+      structure(list(status_code = 201L, body = '{"ok":true}'), class = 'response')
+    },
+    content = function(x, as = 'text', encoding = 'UTF-8', ...) x$body,
+    .package = 'httr'
+  )
+
+  expect_equal(
+    CatMapR:::callAPI(endpoint = 'search', parameters = list(), request = 'GET'),
+    list(ok = TRUE)
+  )
+
+  local_mocked_bindings(
+    GET = function(url, query = NULL, ...) {
+      structure(list(status_code = 404L, body = '{"error":"Not Found"}'), class = 'response')
+    },
+    content = function(x, as = 'text', encoding = 'UTF-8', ...) x$body,
+    .package = 'httr'
+  )
+
+  expect_error(
+    CatMapR:::callAPI(endpoint = 'search', parameters = list(), request = 'GET'),
+    'Not Found',
+    fixed = TRUE
   )
 })
 
@@ -585,6 +635,21 @@ test_that("uploadInputNodes mirrors edit upload payload and includes API-key met
   expect_null(captured$parameters$cred)
   expect_identical(captured$parameters$df[[1]]$CMName, "Yoruba")
   expect_identical(captured$parameters$addoptions, list(district = FALSE, recordyear = FALSE))
+  expect_identical(captured$parameters$allContext, list("Name"))
+})
+
+test_that("uploadInputNodes validates allContext", {
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+      database = "SocioMap",
+      formData = list(),
+      allContext = TRUE,
+      api_key = "cmk_abc123"
+    ),
+    "`allContext` must be NULL, a character vector, or a list.",
+    fixed = TRUE
+  )
 })
 
 test_that("updateWaitingUSES uses env API key when api_key argument is omitted", {

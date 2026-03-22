@@ -36,7 +36,7 @@
 #'   query = "false"
 #' )
 #' }
-translate = function(rows,database,term,property = "Name",domain = "CATEGORY", context = NULL, country = NULL, dataset = NULL, yearStart = NULL, yearEnd = NULL, key = 'false',query = 'false', countsamename = FALSE, uniqueRows = TRUE){
+translate <- function(rows, database, term, property = "Name", domain = "CATEGORY", context = NULL, country = NULL, dataset = NULL, yearStart = NULL, yearEnd = NULL, key = "false", query = "false", countsamename = FALSE, uniqueRows = TRUE) {
   database <- validate_database(database)
   term <- validate_scalar_character(term, "term")
   property <- validate_scalar_character(property, "property")

@@ -46,18 +46,20 @@ resolve_api_url <- function(url = NULL) {
 #' }
 #'
 #' @keywords internal
-callAPI = function(endpoint,
-                     parameters,
-                     request = "GET",
-                     url = NULL,
-                     type = "default",
-                     headers = NULL
-) {
+callAPI <- function(endpoint,
+                    parameters,
+                    request = "GET",
+                    url = NULL,
+                    type = "default",
+                    headers = NULL) {
   endpoint <- validate_scalar_character(endpoint, "endpoint")
   request <- validate_choice(toupper(request), c("GET", "POST"), "request")
   type <- validate_choice(type, c("default", "stream"), "type")
   url <- resolve_api_url(url)
+
   tictoc::tic("API call")
+  on.exit(tictoc::toc(), add = TRUE)
+
   request_headers <- NULL
   if (!is.null(headers) && length(headers) > 0) {
     headers <- headers[!vapply(headers, is.null, logical(1))]
@@ -65,97 +67,78 @@ callAPI = function(endpoint,
       request_headers <- do.call(httr::add_headers, headers)
     }
   }
-  result = NULL
-  if (request == "GET") {
-    result = tryCatch(
-      do.call(
-        httr::GET,
-        c(
-          list(
-            paste0(url, "/", endpoint),
-            query = parameters
-          ),
-          if (!is.null(request_headers)) list(request_headers) else list()
-        )
+
+  if (request == "POST" &&
+      is.character(parameters) &&
+      length(parameters) == 1 &&
+      jsonlite::validate(parameters)) {
+    parameters <- jsonlite::fromJSON(parameters, simplifyVector = FALSE)
+  }
+
+  request_call <- if (request == "GET") {
+    c(
+      list(
+        paste0(url, "/", endpoint),
+        query = parameters
       ),
-      error = function(e) {
-        warning(e)
-        return(e)
-      }
+      if (!is.null(request_headers)) list(request_headers) else list()
     )
   } else {
-    if (is.character(parameters) &&
-        length(parameters) == 1 &&
-        jsonlite::validate(parameters)) {
-      parameters = jsonlite::fromJSON(parameters, simplifyVector = FALSE)
-    }
-    result = tryCatch(
-      do.call(
-        httr::POST,
-        c(
-          list(
-            paste0(url, "/", endpoint),
-            body = parameters,
-            encode = "json",
-            httr::content_type_json()
-          ),
-          if (!is.null(request_headers)) list(request_headers) else list()
-        )
+    c(
+      list(
+        paste0(url, "/", endpoint),
+        body = parameters,
+        encode = "json",
+        httr::content_type_json()
       ),
-      error = function(e) {
-        warning(e)
-        return(e)
-      }
+      if (!is.null(request_headers)) list(request_headers) else list()
     )
   }
-  if (!is.null(result) && !is.null(result$status_code) && result$status_code == 200) {
-    resultContent = tryCatch(
-      httr::content(result, as = "text", encoding = "UTF-8"),
-      error = function(e)
-        return(e)
-    )
-    if (is.character(resultContent)) {
-      if (type == "default") {
-        resultData = tryCatch(
-          resultContent |> jsonlite::fromJSON(),
-          error = function(e)
-            resultContent
-        )
-      } else if (type == "stream") {
-        resultData = resultContent
-      }
-    } else {
-      resultData = resultContent
-    }
-  } else {
-    resultContent = tryCatch(
-      httr::content(result, as = "text", encoding = "UTF-8"),
-      error = function(e)
-        "Unknown error"
-    )
-    parsedErr = tryCatch(
-      jsonlite::fromJSON(resultContent),
-      error = function(e)
-        NULL
-    )
 
-    errMsg = if (!is.null(parsedErr) && !is.null(parsedErr$error)) {
-      parsedErr$error
-    } else if (is.character(resultContent)) {
-      resultContent
-    } else {
-      "Unknown error"
+  result <- tryCatch(
+    do.call(if (request == "GET") httr::GET else httr::POST, request_call),
+    error = function(e) {
+      stop(sprintf("API request failed: %s", conditionMessage(e)), call. = FALSE)
     }
+  )
 
-    resultData = list(error = errMsg)
+  status_code <- httr::status_code(result)
+  result_content <- tryCatch(
+    httr::content(result, as = "text", encoding = "UTF-8"),
+    error = function(e) ""
+  )
+
+  if (!status_code %in% 200:299) {
+    parsed_err <- tryCatch(jsonlite::fromJSON(result_content), error = function(e) NULL)
+    err_msg <- if (!is.null(parsed_err) && !is.null(parsed_err$error)) {
+      parsed_err$error
+    } else if (nzchar(result_content)) {
+      result_content
+    } else {
+      sprintf("HTTP %s", status_code)
+    }
+    stop(err_msg, call. = FALSE)
   }
-  tictoc::toc()
-  if (!inherits(resultData,"data.frame")){
-    resultData = tryCatch({
-      resultData = resultData |> jsonlite::fromJSON()
-    }, error = function(e) {
-      return(resultData)
-    })
+
+  if (type == "stream") {
+    return(result_content)
   }
-  return(resultData)
+
+  if (!nzchar(result_content)) {
+    return(invisible(NULL))
+  }
+
+  result_data <- tryCatch(
+    jsonlite::fromJSON(result_content),
+    error = function(e) result_content
+  )
+
+  if (!inherits(result_data, "data.frame")) {
+    result_data <- tryCatch(
+      jsonlite::fromJSON(result_data),
+      error = function(e) result_data
+    )
+  }
+
+  result_data
 }

@@ -45,6 +45,7 @@ createLinkfile <- function(categoryLabel,
     "resultFormat"
   )
   mergelevel <- validate_positive_integer(mergelevel, "mergelevel")
+  intersection <- validate_scalar_logical(intersection, "intersection")
 
   if (length(datasetChoices) > 1) {
     datasetChoices <- paste(datasetChoices, collapse = ",")

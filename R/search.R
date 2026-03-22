@@ -21,7 +21,7 @@
 #' \dontrun{
 #' searchDatabase(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
 #' }
-searchDatabase = function(database,
+searchDatabase <- function(database,
                   domain = NULL,
                   term = NULL,
                   property = "Name",
