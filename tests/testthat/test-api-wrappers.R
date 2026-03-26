@@ -804,3 +804,79 @@ test_that("submitEditUpload executes upload then waiting-uses refresh", {
   expect_identical(result$upload, list(step = "upload"))
   expect_identical(result$waiting_uses, list(step = "waiting"))
 })
+
+test_that("getMergingTemplate calls merge template endpoint", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      data.frame(mergingID = "M1", datasetID = "D1", stringsAsFactors = FALSE)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getMergingTemplate(database = "ArchaMap", datasetID = "AD947")
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoint, "merge/template/ArchaMap/AD947")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+})
+
+test_that("getMergingTemplateSummary calls merge summary endpoint", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      list(nodeType = "MERGING", mergingTies = data.frame())
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getMergingTemplateSummary(database = "ArchaMap", cmid = "AMM1")
+
+  expect_type(result, "list")
+  expect_identical(captured$endpoint, "merge/template/summary/ArchaMap/AMM1")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+})
+
+test_that("createMergeSyntax posts template rows without API-key headers", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      captured$headers <- headers
+      list(msg = "Syntax created successfully", download = list(hash = "abc123"))
+    },
+    .package = "CatMapR"
+  )
+
+  template <- data.frame(
+    mergingID = "M1",
+    datasetID = "D1",
+    filePath = "/mnt/storage/app/example.csv",
+    stringsAsFactors = FALSE
+  )
+
+  result <- CatMapR::createMergeSyntax(template = template, database = "ArchaMap")
+
+  expect_type(result, "list")
+  expect_identical(captured$endpoint, "merge/syntax/ArchaMap")
+  expect_identical(captured$request, "POST")
+  expect_null(captured$headers)
+  expect_identical(captured$parameters$template[[1]]$mergingID, "M1")
+  expect_identical(result$download$hash, "abc123")
+})

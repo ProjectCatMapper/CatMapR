@@ -259,6 +259,33 @@ result <- submitEditUpload(
 print(result$upload)
 ```
 
+### Merge Template Endpoints (No API Key Required)
+
+The merge-template endpoints used by CatMapperJS are available without an API
+key. CatMapR exposes wrappers for the main read and generate flows:
+
+```r
+# Fetch merge-template rows for a dataset
+template_rows <- getMergingTemplate(
+  database = "ArchaMap",
+  datasetID = "AD947"
+)
+
+# Fetch the MERGING/STACK summary payload used by the node page
+template_summary <- getMergingTemplateSummary(
+  database = "ArchaMap",
+  cmid = "AMM1"
+)
+
+# Generate merge syntax files from a template data frame
+syntax_result <- createMergeSyntax(
+  template = template_rows,
+  database = "ArchaMap"
+)
+
+print(syntax_result$download)
+```
+
 ## Dependencies
 
 CatMapR relies on the following R packages:
