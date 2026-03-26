@@ -26,6 +26,9 @@ reference:
       - translate
   - title: Merge and join
     contents:
+      - getMergingTemplate
+      - getMergingTemplateSummary
+      - createMergeSyntax
       - createLinkfile
       - joinDatasets
   - title: Edit and upload
