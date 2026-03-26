@@ -106,6 +106,14 @@ test_that("getDatasetMetadata is a behavior-compatible alias of datasetInfo", {
   )
 })
 
+test_that("datasetInfo validates optional scalar children", {
+  expect_error(
+    CatMapR::datasetInfo(database = "SocioMap", CMID = "SD1", children = c(TRUE, FALSE)),
+    "`children` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
 test_that("searchDatabase forwards modern search parameters", {
   captured <- new.env(parent = emptyenv())
 
@@ -242,6 +250,19 @@ test_that("createLinkfile formats dataset choices for proposeMergeSubmit", {
   expect_identical(captured$parameters$equivalence, "standard")
 })
 
+test_that("createLinkfile validates logical intersection", {
+  expect_error(
+    CatMapR::createLinkfile(
+      categoryLabel = "ETHNICITY",
+      datasetChoices = c("SD5", "SD6"),
+      database = "SocioMap",
+      intersection = NA
+    ),
+    "`intersection` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
 test_that("joinDatasets includes domain in post payload", {
   captured <- new.env(parent = emptyenv())
 
@@ -299,6 +320,35 @@ test_that("CATMAPR_API_URL controls default API URL resolution", {
   )
 })
 
+test_that("callAPI accepts 2xx responses and surfaces non-2xx errors", {
+  local_mocked_bindings(
+    GET = function(url, query = NULL, ...) {
+      structure(list(status_code = 201L, body = '{"ok":true}'), class = 'response')
+    },
+    content = function(x, as = 'text', encoding = 'UTF-8', ...) x$body,
+    .package = 'httr'
+  )
+
+  expect_equal(
+    CatMapR:::callAPI(endpoint = 'search', parameters = list(), request = 'GET'),
+    list(ok = TRUE)
+  )
+
+  local_mocked_bindings(
+    GET = function(url, query = NULL, ...) {
+      structure(list(status_code = 404L, body = '{"error":"Not Found"}'), class = 'response')
+    },
+    content = function(x, as = 'text', encoding = 'UTF-8', ...) x$body,
+    .package = 'httr'
+  )
+
+  expect_error(
+    CatMapR:::callAPI(endpoint = 'search', parameters = list(), request = 'GET'),
+    'Not Found',
+    fixed = TRUE
+  )
+})
+
 test_that("CMIDinfo uses REST-style CMID/database/cmid endpoint", {
   captured <- new.env(parent = emptyenv())
 
@@ -318,6 +368,201 @@ test_that("CMIDinfo uses REST-style CMID/database/cmid endpoint", {
   expect_identical(captured$endpoint, "CMID/SocioMap/SM1")
   expect_identical(captured$request, "GET")
   expect_identical(captured$parameters, list())
+})
+
+test_that("getDomains returns simplified domain metadata by default", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(
+        list(group = "DISTRICT", nodes = list(c("ADM0", "ADM1")), description = "Administrative district"),
+        list(group = "ETHNICITY", nodes = list("ETHNICITY"), description = "Ethnicity category")
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDomains(database = "SocioMap")
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoint, "getTranslatedomains")
+  expect_identical(captured$request, "GET")
+  expect_identical(captured$parameters, list(database = "SocioMap"))
+  expect_identical(names(result), c("domain", "subdomain", "description"))
+  expect_identical(result$domain, c("DISTRICT", "DISTRICT", "ETHNICITY"))
+  expect_identical(result$subdomain, c("ADM0", "ADM1", "ETHNICITY"))
+  expect_identical(
+    result$description,
+    c("Administrative district", "Administrative district", "Ethnicity category")
+  )
+})
+
+test_that("getDomains returns richer metadata when advanced is TRUE", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      data.frame(
+        group = c("DISTRICT", "LANGUOID"),
+        nodes = I(list(c("ADM0", "ADM1"), c("LANGUAGE", "DIALECT"))),
+        description = c("Administrative district", "Language grouping"),
+        public = c(TRUE, FALSE),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDomains(database = "SocioMap", advanced = TRUE)
+
+  expect_true(all(c("domain", "subdomain", "description", "public") %in% names(result)))
+  expect_identical(result$domain, c("DISTRICT", "DISTRICT", "LANGUOID", "LANGUOID"))
+  expect_identical(result$subdomain, c("ADM0", "ADM1", "LANGUAGE", "DIALECT"))
+  expect_identical(result$public, c(TRUE, TRUE, FALSE, FALSE))
+})
+
+test_that("getDomains adds missing descriptions and validates advanced", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(list(group = "DISTRICT", nodes = list(c("ADM0", "ADM1"))))
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getDomains(database = "SocioMap")
+
+  expect_identical(names(result), c("domain", "subdomain", "description"))
+  expect_true(all(is.na(result$description)))
+
+  expect_error(
+    CatMapR::getDomains(database = "SocioMap", advanced = NA),
+    "`advanced` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
+test_that("getProperties calls canonical properties endpoint and returns table", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      list(
+        database = "archamap",
+        table = list(
+          list(nodeID = "CP1", CMName = "country", property = "CMName", value = "country"),
+          list(nodeID = "CP1", CMName = "country", property = "type", value = "relationship")
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getProperties(database = "ArchaMap")
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoint, "metadata/properties/archamap")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+  expect_identical(names(result), c("nodeID", "CMName", "property", "value"))
+  expect_identical(result$CMName, c("country", "country"))
+  expect_identical(result$property, c("CMName", "type"))
+})
+
+test_that("getProperties handles empty or bare table responses", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(database = "sociomap", table = list())
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getProperties(database = "SocioMap")
+  expect_s3_class(result, "data.frame")
+  expect_identical(names(result), c("nodeID", "CMName", "property", "value"))
+  expect_identical(nrow(result), 0L)
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(nodeID = "CP2", CMName = "yearStart", property = "property", value = "yearStart")
+    },
+    .package = "CatMapR"
+  )
+
+  bare <- CatMapR::getProperties(database = "SocioMap")
+  expect_identical(nrow(bare), 1L)
+  expect_identical(bare$CMName, "yearStart")
+})
+
+test_that("getUploadProperties calls canonical upload properties endpoint", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      list(
+        database = "archamap",
+        nodeProperties = list(
+          list(property = "DatasetCitation", description = "Dataset citation")
+        ),
+        usesProperties = list(
+          list(property = "yearStart", description = "Starting date")
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getUploadProperties(database = "ArchaMap")
+
+  expect_type(result, "list")
+  expect_identical(captured$endpoint, "metadata/uploadProperties/archamap")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+  expect_identical(result$database, "archamap")
+  expect_s3_class(result$nodeProperties, "data.frame")
+  expect_s3_class(result$usesProperties, "data.frame")
+  expect_identical(result$nodeProperties$property, "DatasetCitation")
+  expect_identical(result$usesProperties$property, "yearStart")
+})
+
+test_that("getUploadProperties fills missing descriptions and defaults database", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(
+        nodeProperties = list(list(property = "shortName")),
+        usesProperties = list()
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getUploadProperties(database = "SocioMap")
+
+  expect_identical(result$database, "SocioMap")
+  expect_true(all(c("property", "description") %in% names(result$nodeProperties)))
+  expect_true(is.na(result$nodeProperties$description[[1]]))
+  expect_identical(nrow(result$usesProperties), 0L)
+})
+
+test_that("property wrappers surface API errors cleanly", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(error = "Not Found")
+    },
+    .package = "CatMapR"
+  )
+
+  expect_error(CatMapR::getProperties(database = "ArchaMap"), "Not Found", fixed = TRUE)
+  expect_error(CatMapR::getUploadProperties(database = "ArchaMap"), "Not Found", fixed = TRUE)
 })
 
 test_that("uploadInputNodes requires API key", {
@@ -390,6 +635,21 @@ test_that("uploadInputNodes mirrors edit upload payload and includes API-key met
   expect_null(captured$parameters$cred)
   expect_identical(captured$parameters$df[[1]]$CMName, "Yoruba")
   expect_identical(captured$parameters$addoptions, list(district = FALSE, recordyear = FALSE))
+  expect_identical(captured$parameters$allContext, list("Name"))
+})
+
+test_that("uploadInputNodes validates allContext", {
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+      database = "SocioMap",
+      formData = list(),
+      allContext = TRUE,
+      api_key = "cmk_abc123"
+    ),
+    "`allContext` must be NULL, a character vector, or a list.",
+    fixed = TRUE
+  )
 })
 
 test_that("uploadInputNodes simple mode warns and strips preformatted key expressions", {

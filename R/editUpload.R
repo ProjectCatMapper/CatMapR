@@ -67,8 +67,9 @@ uploadInputNodes <- function(df,
   mergingType <- validate_scalar_character(mergingType, "mergingType")
   key <- resolve_api_key(api_key)
   if (!is.list(formData)) {
-    stop("`formData` must be a list.")
+    stop("`formData` must be a list.", call. = FALSE)
   }
+  allContext <- validate_character_collection(allContext, "allContext")
 
   rows <- coerce_upload_rows(df)
   rows <- sanitize_simple_upload_key_values(
@@ -190,9 +191,7 @@ submitEditUpload <- function(df,
   so <- validate_scalar_character(so, "so")
   ao <- validate_scalar_character(ao, "ao")
   mergingType <- validate_scalar_character(mergingType, "mergingType")
-  if (!is.logical(refresh_waiting_uses) || length(refresh_waiting_uses) != 1 || is.na(refresh_waiting_uses)) {
-    stop("`refresh_waiting_uses` must be TRUE or FALSE.", call. = FALSE)
-  }
+  refresh_waiting_uses <- validate_scalar_logical(refresh_waiting_uses, "refresh_waiting_uses")
 
   upload_result <- uploadInputNodes(
     df = df,

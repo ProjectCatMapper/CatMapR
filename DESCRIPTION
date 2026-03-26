@@ -1,15 +1,18 @@
 Package: CatMapR
 Type: Package
 Title: Interface to the CatMapper API
-Version: 0.1.2
+Version: 0.1.2.9000
 Author: Robert J. Bischoff
 Maintainer: Robert J. Bischoff <bischrob@gmail.com>
+Depends:
+    R (>= 4.1.0)
 Description: Provides wrappers for the CatMapper API
     <https://catmapper.org>. CatMapper organizes category systems used in
     social science and archaeology, including ethnicities, languages,
     religions, districts, and material-culture classes. The package supports
-    dataset metadata discovery, category search, translation workflows, and selected
-    authenticated upload operations for SocioMap and ArchaMap.
+    dataset metadata discovery, category search, translation workflows,
+    metadata introspection, and selected authenticated upload operations for
+    SocioMap and ArchaMap.
 License: GPL-3
 URL: https://projectcatmapper.github.io/CatMapR/,
     https://catmapper.org,

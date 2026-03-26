@@ -23,9 +23,7 @@ datasetInfo <- function(database, CMID, domain = "CATEGORY", children = NULL) {
   database <- validate_database(database)
   CMID <- validate_scalar_character(CMID, "CMID")
   domain <- validate_scalar_character(domain, "domain")
-  if (!is.null(children) && !is.logical(children)) {
-    stop("`children` must be logical or NULL.", call. = FALSE)
-  }
+  children <- validate_optional_scalar_logical(children, "children")
 
   # Define the endpoint and parameters
   endpoint <- "dataset"

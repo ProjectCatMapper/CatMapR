@@ -14,7 +14,6 @@ This site contains the CatMapR package documentation, including function referen
   <img src="man/figures/archamap-logo.webp" alt="ArchaMap logo" height="17" />
 </p>
 
-
 **CatMapR** is an R package that provides an interface to the [CatMapper API](https://catmapper.org), facilitating access to dataset catalog metadata, categories, and entities managed within CatMapper's systems, including `SocioMap` and `ArchaMap`. CatMapper organizes complex category systems—such as ethnicities, languages, religions, political districts, and artifacts—frequently used in social science and archaeological research.
 
 This package allows users to:
@@ -22,7 +21,9 @@ This package allows users to:
 * Retrieve dataset catalog metadata from CatMapper databases.
 * Search for specific categories or entities and obtain detailed information.
 * Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
+* Discover domain and property metadata used by CatMapper deployments.
 * Create and join datasets across different domains for integrated analysis.
+* Submit authenticated edit/upload operations using API-key-based write access.
 
 ## Installation
 
@@ -38,25 +39,39 @@ remotes::install_github("projectCatMapper/CatMapR")
 
 ## Package Overview
 
-The **CatMapR** package includes the following main functions:
+### Preferred public functions
 
-- **`listDatasetMetadata`**: Preferred alias for listing dataset catalog metadata in a specified database (`SocioMap` or `ArchaMap`).
-- **`allDatasets`**: Legacy-compatible name for `listDatasetMetadata()`.
-- **`callAPI`**: Helper function for calling the CatMapper API with specified parameters.
-- **`CMIDinfo`**: Fetches details about a specific entity by CatMapper ID (CMID).
-- **`createLinkfile`**: Proposes and returns a merge of datasets based on a category domain and specified datasets.
-- **`getDatasetMetadata`**: Preferred alias for retrieving metadata for a dataset CMID.
-- **`datasetInfo`**: Legacy-compatible name for `getDatasetMetadata()`.
-- **`joinDatasets`**: Joins two datasets based on specified parameters, returning the joined data with translated keys.
-- **`searchDatabase`**: Searches for terms within a database, allowing filtering by domain, property, year, and context.
-- **`translate`**: Translates terms within datasets by matching specified properties and domains, facilitating category consistency across data sources.
-- **`uploadInputNodes`**: Uploads edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required).
-- **`updateWaitingUSES`**: Triggers `/updateWaitingUSES` after uploads (write operation; API key required).
-- **`submitEditUpload`**: Runs the same two-step flow as the CatMapperJS edit page: upload, then waiting-USES refresh.
+- **`listDatasetMetadata()`**: List dataset catalog metadata for `SocioMap` or `ArchaMap`.
+- **`getDatasetMetadata()`**: Retrieve metadata for a specific dataset CMID.
+- **`CMIDinfo()`**: Fetch details about a specific entity by CatMapper ID (CMID).
+- **`searchDatabase()`**: Search for terms within a database, optionally filtering by domain, property, year, and context.
+- **`translate()`**: Translate terms within data frames by matching specified properties and domains.
+- **`createLinkfile()`**: Propose merge keys for selected datasets within a category domain.
+- **`joinDatasets()`**: Join two aligned datasets through CatMapper matching infrastructure.
+- **`getDomains()`**: Retrieve CatMapper domain/subdomain metadata.
+- **`getUploadProperties()`**: Retrieve upload-oriented property metadata grouped into node and USES relationship fields.
+- **`getProperties()`**: Retrieve flattened property metadata from API deployments that expose `/metadata/properties/<database>`.
+- **`uploadInputNodes()`**: Upload edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required).
+- **`updateWaitingUSES()`**: Trigger `/updateWaitingUSES` after uploads (write operation; API key required).
+- **`submitEditUpload()`**: Run the same two-step flow as the CatMapperJS edit page: upload, then waiting-USES refresh.
+
+### Legacy-compatible aliases
+
+- **`allDatasets()`**: Legacy-compatible alias for `listDatasetMetadata()`.
+- **`datasetInfo()`**: Legacy-compatible alias for `getDatasetMetadata()`.
+
+### Internal helper
+
+- **`callAPI()`**: Internal helper used by exported wrappers. This is not part of the preferred user-facing API.
+
+### Metadata helper notes
+
+- `getUploadProperties()` targets the canonical production API and is intended for upload/edit introspection.
+- `getProperties()` depends on deployments that expose `GET /metadata/properties/<database>`. During rollout, some deployments may support `getUploadProperties()` before `getProperties()`.
 
 ### What CatMapR Returns
 
-- **Returns metadata and API responses**, including dataset catalog fields (for example CMID, CMName, citations, relationships), category matches, and translation/join outputs.
+- **Returns metadata and API responses**, including dataset catalog fields (for example CMID, CMName, citations, relationships), category matches, translation/join outputs, and metadata/property tables.
 - **Does not download dataset source files** managed outside CatMapper. User-owned raw datasets remain external inputs to your R workflow.
 
 ### UI-to-R Function Mapping
@@ -65,10 +80,10 @@ The **CatMapR** package includes the following main functions:
 
 | CatMapperJS route | UI workflow | CatMapR functions |
 | --- | --- | --- |
-| `/:database/explore` | Search and inspect entities/categories | `searchDatabase()`, `CMIDinfo()` |
+| `/:database/explore` | Search and inspect entities/categories | `searchDatabase()`, `CMIDinfo()`, `getDomains()` |
 | `/:database/translate` | Translate labels and review proposed matches | `translate()` |
 | `/:database/merge` | Propose key mappings and join aligned tables | `createLinkfile()`, `joinDatasets()` |
-| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `getUploadProperties()`, `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
 
 ## Usage
 
@@ -117,6 +132,29 @@ print(dataset_meta)
 # Legacy equivalent
 # dataset_meta <- datasetInfo(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
 # print(dataset_meta)
+```
+
+### Retrieve Domain Metadata
+
+```r
+domains <- getDomains(database = "ArchaMap")
+head(domains)
+```
+
+### Retrieve Upload-Oriented Property Metadata
+
+```r
+upload_props <- getUploadProperties(database = "ArchaMap")
+head(upload_props$nodeProperties)
+head(upload_props$usesProperties)
+```
+
+### Retrieve Flattened Property Metadata
+
+```r
+# This wrapper depends on API deployments exposing /metadata/properties/<database>
+# properties <- getProperties(database = "ArchaMap")
+# head(properties)
 ```
 
 ### Retrieve Details for a Specific CMID

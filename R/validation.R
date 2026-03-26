@@ -40,3 +40,33 @@ validate_positive_integer <- function(x, arg) {
   as.integer(x)
 }
 
+validate_scalar_logical <- function(x, arg) {
+  if (!is.logical(x) || length(x) != 1 || is.na(x)) {
+    stop(sprintf("`%s` must be TRUE or FALSE.", arg), call. = FALSE)
+  }
+  x
+}
+
+validate_optional_scalar_logical <- function(x, arg) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  validate_scalar_logical(x, arg)
+}
+
+validate_character_collection <- function(x, arg) {
+  if (is.null(x)) {
+    return(list())
+  }
+
+  if (is.character(x)) {
+    return(as.list(x))
+  }
+
+  if (is.list(x)) {
+    return(x)
+  }
+
+  stop(sprintf("`%s` must be NULL, a character vector, or a list.", arg), call. = FALSE)
+}
+

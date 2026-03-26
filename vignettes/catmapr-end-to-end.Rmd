@@ -31,10 +31,11 @@ also available through the CatMapper web application at <https://catmapper.org>.
 This vignette shows a standard CatMapR workflow:
 
 1. list available dataset metadata,
-2. search and inspect categories,
-3. translate external labels,
-4. run basic quality checks,
-5. join harmonized tables.
+2. inspect metadata helpers,
+3. search and inspect categories,
+4. translate external labels,
+5. run basic quality checks,
+6. join harmonized tables.
 
 By default, chunks run in offline demo mode for reproducible rendering.
 
@@ -57,7 +58,8 @@ CatMapR wrappers return CatMapper API responses, including:
 
 - dataset catalog metadata (for example CMID, CMName, citation fields, years),
 - category/entity metadata and relationship details,
-- translation and join outputs.
+- translation and join outputs,
+- metadata/property discovery tables.
 
 CatMapR does **not** fetch raw dataset source files managed outside CatMapper.
 User-owned/raw datasets are external inputs to your R workflow.
@@ -68,10 +70,10 @@ User-owned/raw datasets are external inputs to your R workflow.
 
 | CatMapperJS route | Typical UI step | CatMapR function(s) |
 | --- | --- | --- |
-| `/:database/explore` | Search categories/entities and inspect details | `searchDatabase()`, `CMIDinfo()` |
+| `/:database/explore` | Search categories/entities and inspect details | `searchDatabase()`, `CMIDinfo()`, `getDomains()` |
 | `/:database/translate` | Upload labels, run matching, review translated outputs | `translate()` |
 | `/:database/merge` | Propose merge keys and join aligned datasets | `createLinkfile()`, `joinDatasets()` |
-| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `getUploadProperties()`, `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
 
 ## UI Workflow Crosswalk (Detailed)
 
@@ -79,6 +81,7 @@ User-owned/raw datasets are external inputs to your R workflow.
 | --- | --- | --- | --- |
 | Browse available dataset records | `/:database` and `/:database/explore` | Open database and review dataset catalog entries | `listDatasetMetadata(database)` (legacy: `allDatasets(database)`) |
 | Inspect one known dataset CMID | `/:database/:cmid` | Open dataset info page | `getDatasetMetadata(database, CMID, domain, children)` (legacy: `datasetInfo(...)`) |
+| Browse metadata helpers | `/:database/explore` and `/:database/edit` | Inspect available domains and property fields | `getDomains(database)`, `getUploadProperties(database)` |
 | Find entities/categories | `/:database/explore` | Run search filters and inspect hits | `searchDatabase(...)`, then `CMIDinfo(...)` |
 | Harmonize labels | `/:database/translate` | Upload table and run translation | `translate(rows, database, term, ...)` |
 | Build merge candidates | `/:database/merge` | Propose merge linkfile | `createLinkfile(categoryLabel, datasetChoices, ...)` |
@@ -124,7 +127,35 @@ if (run_live) {
 head(datasets)
 ```
 
-## 2) Search and Inspect a Category
+## 2) Inspect Metadata Helpers
+
+```{r metadata-helpers}
+if (run_live) {
+  domains <- getDomains(database = "SocioMap")
+  upload_props <- getUploadProperties(database = "SocioMap")
+} else {
+  domains <- data.frame(
+    domain = c("DISTRICT", "DISTRICT", "ETHNICITY"),
+    subdomain = c("ADM0", "ADM1", "ETHNICITY"),
+    description = c("Administrative district", "Administrative district", "Ethnicity category"),
+    stringsAsFactors = FALSE
+  )
+  upload_props <- list(
+    database = "SocioMap",
+    nodeProperties = data.frame(property = "DatasetCitation", description = "Dataset citation", stringsAsFactors = FALSE),
+    usesProperties = data.frame(property = "yearStart", description = "Starting date", stringsAsFactors = FALSE)
+  )
+}
+
+head(domains)
+head(upload_props$nodeProperties)
+head(upload_props$usesProperties)
+```
+
+`getProperties()` is also available for deployments that expose
+`/metadata/properties/<database>`, but rollout timing may vary by API deployment.
+
+## 3) Search and Inspect a Category
 
 ```{r search-inspect}
 if (run_live) {
@@ -152,7 +183,7 @@ hits
 str(details)
 ```
 
-## 3) Prepare External Input
+## 4) Prepare External Input
 
 ```{r input-table}
 raw_df <- data.frame(
@@ -165,7 +196,7 @@ raw_df <- data.frame(
 raw_df
 ```
 
-## 4) Translate Labels
+## 5) Translate Labels
 
 ```{r translate}
 if (run_live) {
@@ -192,7 +223,7 @@ if (run_live) {
 translated$file
 ```
 
-## 5) Post-Translation Checks
+## 6) Post-Translation Checks
 
 ```{r checks}
 translated_df <- translated$file
@@ -208,7 +239,7 @@ if (!is.data.frame(translated_df) || !"generated_CMID" %in% names(translated_df)
 }
 ```
 
-## 6) Join Harmonized Tables
+## 7) Join Harmonized Tables
 
 ```{r join}
 if (run_live) {
@@ -269,7 +300,7 @@ upload_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-submitEditUpload(
+result <- submitEditUpload(
   df = upload_payload,
   database = "SocioMap",
   formData = list(
@@ -278,6 +309,7 @@ submitEditUpload(
     datasetID = "SD1",
     cmNameColumn = "CMName",
     categoryNamesColumn = "Name",
+    alternateCategoryNamesColumns = character(0),
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
@@ -285,15 +317,6 @@ submitEditUpload(
   ao = "add_uses",
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
+
+str(result)
 ```
-
-## Reproducibility
-
-- Default mode: `CATMAPR_RUN_LIVE=false` (or unset).
-- Live mode:
-
-```{r live-mode, eval = FALSE}
-Sys.setenv(CATMAPR_RUN_LIVE = "true")
-```
-
-CatMapR release policy targets backward-compatible behavior for exported functions and called API endpoints within the `0.1.x` line.
