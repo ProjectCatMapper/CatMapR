@@ -584,17 +584,32 @@ test_that("uploadInputNodes requires API key", {
   )
 })
 
-test_that("uploadInputNodes mirrors edit upload payload and includes API-key metadata", {
+test_that("uploadInputNodes polls task status and returns server dataframe", {
   captured <- new.env(parent = emptyenv())
+  captured$calls <- character(0)
 
   local_mocked_bindings(
     callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
-      captured$endpoint <- endpoint
-      captured$parameters <- parameters
-      captured$request <- request
-      captured$url <- url
-      captured$headers <- headers
-      list(ok = TRUE)
+      captured$calls <- c(captured$calls, endpoint)
+      if (endpoint == "uploadInputNodes") {
+        captured$start_parameters <- parameters
+        captured$headers <- headers
+        captured$request <- request
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(
+          list(
+            taskId = "task-123",
+            status = "completed",
+            nextCursor = 1,
+            waitingUsesTask = "wait-1",
+            file = list(list(CMID = "SM100", Key = "Type == Adamana Brown", variable = "CeramicType")),
+            order = c("CMID", "Key", "variable")
+          )
+        )
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
     },
     .package = "CatMapR"
   )
@@ -621,24 +636,26 @@ test_that("uploadInputNodes mirrors edit upload payload and includes API-key met
     so = "simple",
     ao = "add_uses",
     allContext = c("Name"),
-    api_key = "cmk_abc123"
+    api_key = "cmk_abc123",
+    poll_interval_seconds = 0.001,
+    timeout_seconds = 1
   )
 
-  expect_equal(result, list(ok = TRUE))
-  expect_identical(captured$endpoint, "uploadInputNodes")
+  expect_s3_class(result, "data.frame")
+  expect_identical(names(result), c("CMID", "Key", "variable"))
+  expect_identical(result$CMID[[1]], "SM100")
+  expect_identical(captured$calls, c("uploadInputNodes", "uploadInputNodesStatus"))
   expect_identical(captured$request, "POST")
   expect_identical(captured$headers[["X-API-Key"]], "cmk_abc123")
-  expect_identical(captured$parameters$so, "simple")
-  expect_identical(captured$parameters$ao, "add_uses")
-  expect_identical(captured$parameters$database, "SocioMap")
-  expect_null(captured$parameters$user)
-  expect_null(captured$parameters$cred)
-  expect_identical(captured$parameters$df[[1]]$CMName, "Yoruba")
-  expect_identical(captured$parameters$addoptions, list(district = FALSE, recordyear = FALSE))
-  expect_identical(captured$parameters$allContext, list("Name"))
+  expect_identical(captured$start_parameters$so, "simple")
+  expect_identical(captured$start_parameters$ao, "add_uses")
+  expect_identical(captured$start_parameters$database, "SocioMap")
+  expect_identical(captured$start_parameters$df[[1]]$CMName, "Yoruba")
+  expect_identical(captured$start_parameters$addoptions, list(district = FALSE, recordyear = FALSE))
+  expect_identical(captured$start_parameters$allContext, list("Name"))
 })
 
-test_that("uploadInputNodes validates allContext", {
+test_that("uploadInputNodes validates allContext and optionalProperties", {
   expect_error(
     CatMapR::uploadInputNodes(
       df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
@@ -650,18 +667,49 @@ test_that("uploadInputNodes validates allContext", {
     "`allContext` must be NULL, a character vector, or a list.",
     fixed = TRUE
   )
+
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+      database = "SocioMap",
+      formData = list(),
+      optionalProperties = TRUE,
+      api_key = "cmk_abc123"
+    ),
+    "`optionalProperties` must be NULL, a character vector, or a list.",
+    fixed = TRUE
+  )
 })
 
-test_that("uploadInputNodes simple mode warns and strips preformatted key expressions", {
+test_that("uploadInputNodes simple mode only supports add_uses", {
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = data.frame(CMName = "Yoruba", Name = "Yoruba", Key = "eth:yoruba", stringsAsFactors = FALSE),
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "simple",
+      ao = "update_add",
+      api_key = "cmk_abc123"
+    ),
+    "only supported when `ao = \"add_uses\"`",
+    fixed = TRUE
+  )
+})
+
+test_that("uploadInputNodes simple mode rejects preformatted key expressions", {
   captured <- new.env(parent = emptyenv())
 
   local_mocked_bindings(
     callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
-      captured$endpoint <- endpoint
-      captured$parameters <- parameters
-      captured$request <- request
-      captured$url <- url
-      captured$headers <- headers
+      captured$called <- TRUE
       list(ok = TRUE)
     },
     .package = "CatMapR"
@@ -674,50 +722,6 @@ test_that("uploadInputNodes simple mode warns and strips preformatted key expres
     stringsAsFactors = FALSE
   )
 
-  expect_warning(
-    result <- CatMapR::uploadInputNodes(
-      df = rows,
-      database = "SocioMap",
-      formData = list(
-        domain = "ETHNICITY",
-        subdomain = "ETHNICITY",
-        datasetID = "SD1",
-        cmNameColumn = "CMName",
-        categoryNamesColumn = "Name",
-        cmidColumn = "CMID",
-        keyColumn = "Key"
-      ),
-      so = "simple",
-      ao = "add_uses",
-      api_key = "cmk_abc123"
-    ),
-    "`so = \"simple\"` expects raw key values",
-    fixed = TRUE
-  )
-
-  expect_equal(result, list(ok = TRUE))
-  expect_identical(captured$parameters$df[[1]]$Key, "yoruba")
-})
-
-test_that("uploadInputNodes simple mode rejects compound key expressions", {
-  captured <- new.env(parent = emptyenv())
-  captured$called <- FALSE
-
-  local_mocked_bindings(
-    callAPI = function(...) {
-      captured$called <- TRUE
-      list(ok = TRUE)
-    },
-    .package = "CatMapR"
-  )
-
-  rows <- data.frame(
-    CMName = "Yoruba",
-    Name = "Yoruba",
-    Key = "language == yoruba && country == ng",
-    stringsAsFactors = FALSE
-  )
-
   expect_error(
     CatMapR::uploadInputNodes(
       df = rows,
@@ -735,60 +739,143 @@ test_that("uploadInputNodes simple mode rejects compound key expressions", {
       ao = "add_uses",
       api_key = "cmk_abc123"
     ),
-    "must use `so = \"standard\"`",
+    "include preformatted key expressions",
     fixed = TRUE
   )
-
-  expect_false(captured$called)
+  expect_false(isTRUE(captured$called))
 })
 
-test_that("updateWaitingUSES uses env API key when api_key argument is omitted", {
-  original <- Sys.getenv("CATMAPR_API_KEY", unset = NA_character_)
-  on.exit({
-    if (is.na(original)) {
-      Sys.unsetenv("CATMAPR_API_KEY")
-    } else {
-      Sys.setenv(CATMAPR_API_KEY = original)
-    }
-  }, add = TRUE)
-  Sys.setenv(CATMAPR_API_KEY = "env-key")
-
-  captured <- new.env(parent = emptyenv())
-
-  local_mocked_bindings(
-    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
-      captured$endpoint <- endpoint
-      captured$parameters <- parameters
-      captured$request <- request
-      captured$headers <- headers
-      list(ok = TRUE)
-    },
-    .package = "CatMapR"
-  )
-
-  result <- CatMapR::updateWaitingUSES(database = "ArchaMap")
-
-  expect_equal(result, list(ok = TRUE))
-  expect_identical(captured$endpoint, "updateWaitingUSES")
-  expect_identical(captured$request, "POST")
-  expect_identical(captured$parameters$database, "ArchaMap")
-  expect_identical(captured$headers[["X-API-Key"]], "env-key")
-  expect_null(captured$headers[["X-API-User"]])
-  expect_null(captured$parameters$cred)
-})
-
-test_that("submitEditUpload executes upload then waiting-uses refresh", {
+test_that("uploadInputNodes standard mode accepts preformatted composite keys", {
   captured <- new.env(parent = emptyenv())
   captured$calls <- character(0)
 
   local_mocked_bindings(
-    uploadInputNodes = function(...) {
-      captured$calls <- c(captured$calls, "upload")
-      list(step = "upload")
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$calls <- c(captured$calls, endpoint)
+      if (endpoint == "uploadInputNodes") {
+        captured$key <- parameters$df[[1]]$Key
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(list(taskId = "task-123", status = "completed", file = list(list(CMID = "SM1")), order = c("CMID")))
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
     },
-    updateWaitingUSES = function(...) {
-      captured$calls <- c(captured$calls, "waiting")
-      list(step = "waiting")
+    .package = "CatMapR"
+  )
+
+  rows <- data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    CMID = "SM1",
+    Key = "language == yoruba && country == ng",
+    datasetID = "SD1",
+    stringsAsFactors = FALSE
+  )
+
+  result <- CatMapR::uploadInputNodes(
+      df = rows,
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "standard",
+      ao = "add_uses",
+      api_key = "cmk_abc123",
+      poll_interval_seconds = 0.001,
+      timeout_seconds = 1
+  )
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$calls, c("uploadInputNodes", "uploadInputNodesStatus"))
+  expect_identical(captured$key, "language == yoruba && country == ng")
+})
+
+test_that("uploadInputNodes times out when task does not complete", {
+  rows <- data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    Key = "eth:yoruba",
+    stringsAsFactors = FALSE
+  )
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      if (endpoint == "uploadInputNodes") {
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(list(taskId = "task-123", status = "running", nextCursor = 0))
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
+    },
+    .package = "CatMapR"
+  )
+
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = rows,
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "simple",
+      ao = "add_uses",
+      api_key = "cmk_abc123",
+      poll_interval_seconds = 0.001,
+      timeout_seconds = 0.01
+    ),
+    "Timed out waiting for upload task",
+    fixed = TRUE
+  )
+})
+
+test_that("resolve_api_key supports CATMAPPER_API_KEY fallback", {
+  original_new <- Sys.getenv("CATMAPR_API_KEY", unset = NA_character_)
+  original_legacy <- Sys.getenv("CATMAPPER_API_KEY", unset = NA_character_)
+  on.exit({
+    if (is.na(original_new)) Sys.unsetenv("CATMAPR_API_KEY") else Sys.setenv(CATMAPR_API_KEY = original_new)
+    if (is.na(original_legacy)) Sys.unsetenv("CATMAPPER_API_KEY") else Sys.setenv(CATMAPPER_API_KEY = original_legacy)
+  }, add = TRUE)
+
+  Sys.unsetenv("CATMAPR_API_KEY")
+  Sys.setenv(CATMAPPER_API_KEY = "legacy-key")
+  expect_identical(CatMapR:::resolve_api_key(NULL), "legacy-key")
+})
+
+test_that("submitEditUpload skips extra waiting-USES trigger when task id already present", {
+  captured <- new.env(parent = emptyenv())
+  captured$endpoints <- character(0)
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoints <- c(captured$endpoints, endpoint)
+      if (endpoint == "uploadInputNodes") {
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(
+          list(
+            taskId = "task-123",
+            status = "completed",
+            waitingUsesTask = "wait-1",
+            file = list(list(CMID = "SM1", variable = "CeramicType")),
+            order = c("CMID", "variable")
+          )
+        )
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
     },
     .package = "CatMapR"
   )
@@ -796,13 +883,155 @@ test_that("submitEditUpload executes upload then waiting-uses refresh", {
   result <- CatMapR::submitEditUpload(
     df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
     database = "SocioMap",
-    formData = list(),
-    api_key = "cmk_example"
+    formData = list(
+      domain = "ETHNICITY",
+      subdomain = "ETHNICITY",
+      datasetID = "SD1",
+      cmNameColumn = "CMName",
+      categoryNamesColumn = "CMName",
+      cmidColumn = "CMID",
+      keyColumn = "CMName"
+    ),
+    so = "simple",
+    ao = "add_uses",
+    api_key = "cmk_example",
+    poll_interval_seconds = 0.001,
+    timeout_seconds = 1
   )
 
-  expect_identical(captured$calls, c("upload", "waiting"))
-  expect_identical(result$upload, list(step = "upload"))
-  expect_identical(result$waiting_uses, list(step = "waiting"))
+  expect_s3_class(result, "data.frame")
+  expect_identical(result$CMID[[1]], "SM1")
+  expect_identical(
+    captured$endpoints,
+    c("uploadInputNodes", "uploadInputNodesStatus")
+  )
+})
+
+test_that("submitEditUpload fire-and-forget triggers updateWaitingUSES when waiting task id absent", {
+  captured <- new.env(parent = emptyenv())
+  captured$endpoints <- character(0)
+  captured$update_headers <- NULL
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoints <- c(captured$endpoints, endpoint)
+      if (endpoint == "uploadInputNodes") {
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(list(taskId = "task-123", status = "completed", file = list(list(CMID = "SM1")), order = c("CMID")))
+      }
+      if (endpoint == "updateWaitingUSES") {
+        captured$update_headers <- headers
+        return(list(ok = TRUE))
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::submitEditUpload(
+    df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+    database = "SocioMap",
+    formData = list(
+      domain = "ETHNICITY",
+      subdomain = "ETHNICITY",
+      datasetID = "SD1",
+      cmNameColumn = "CMName",
+      categoryNamesColumn = "CMName",
+      cmidColumn = "CMID",
+      keyColumn = "CMName"
+    ),
+    so = "simple",
+    ao = "add_uses",
+    api_key = "cmk_example",
+    poll_interval_seconds = 0.001,
+    timeout_seconds = 1
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoints, c("uploadInputNodes", "uploadInputNodesStatus", "updateWaitingUSES"))
+  expect_null(captured$update_headers)
+})
+
+test_that("submitEditUpload warns but succeeds when waiting-USES trigger fails", {
+  captured <- new.env(parent = emptyenv())
+  captured$endpoints <- character(0)
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoints <- c(captured$endpoints, endpoint)
+      if (endpoint == "uploadInputNodes") {
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(list(taskId = "task-123", status = "completed", file = list(list(CMID = "SM1")), order = c("CMID")))
+      }
+      if (endpoint == "updateWaitingUSES") {
+        stop("trigger unavailable")
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
+    },
+    .package = "CatMapR"
+  )
+
+  expect_warning(
+    result <- CatMapR::submitEditUpload(
+      df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "CMName",
+        cmidColumn = "CMID",
+        keyColumn = "CMName"
+      ),
+      so = "simple",
+      ao = "add_uses",
+      api_key = "cmk_example",
+      poll_interval_seconds = 0.001,
+      timeout_seconds = 1
+    ),
+    "Failed to trigger waiting-USES refresh",
+    fixed = TRUE
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoints, c("uploadInputNodes", "uploadInputNodesStatus", "updateWaitingUSES"))
+})
+
+test_that("prepare_edit_upload validates mapped formData columns for standard mode", {
+  expect_error(
+    CatMapR::prepare_edit_upload(
+      df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "standard",
+      ao = "add_uses"
+    ),
+    "Mapped formData column(s) not found",
+    fixed = TRUE
+  )
+})
+
+test_that("key helper functions normalize and validate keys", {
+  expect_identical(CatMapR::build_key("Type", "Adamana Brown"), "Type == Adamana Brown")
+  expect_identical(
+    CatMapR::normalize_key("Key == Region == Flagstaff"),
+    "Region == Flagstaff"
+  )
+  expect_true(CatMapR::is_normalized_key("Region == Flagstaff"))
+  expect_false(CatMapR::is_normalized_key("Key == Region == Flagstaff"))
 })
 
 test_that("getMergingTemplate calls merge template endpoint", {

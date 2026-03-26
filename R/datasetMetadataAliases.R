@@ -23,6 +23,8 @@ listDatasetMetadata <- function(database) {
 #'
 #' Preferred metadata-focused alias for [datasetInfo()].
 #' This function returns dataset metadata records, not raw dataset files.
+#' Returned `Key` values can be stored-form keys (for example prefixed with
+#' `Key == `) and may need normalization before reuse in upload workflows.
 #'
 #' @inheritParams datasetInfo
 #'

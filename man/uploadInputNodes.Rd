@@ -12,8 +12,11 @@ uploadInputNodes(
   ao = "add_node",
   addoptions = list(district = FALSE, recordyear = FALSE),
   allContext = list(),
+  optionalProperties = NULL,
   mergingType = "0",
   api_key = NULL,
+  poll_interval_seconds = 1,
+  timeout_seconds = 600,
   url = NULL
 )
 }
@@ -36,15 +39,24 @@ the \code{==} expression.}
 
 \item{allContext}{Optional vector/list of contextual columns.}
 
+\item{optionalProperties}{Optional vector/list alias for \code{allContext}.
+When provided, this value is used as the upload property list.}
+
 \item{mergingType}{Optional merging mode used by merge upload workflows.}
 
 \item{api_key}{API key used for authenticated write actions. If \code{NULL},
 \code{CATMAPR_API_KEY} is used.}
 
+\item{poll_interval_seconds}{Polling interval in seconds while waiting for
+queued upload tasks.}
+
+\item{timeout_seconds}{Maximum seconds to wait for upload completion.}
+
 \item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.}
 }
 \value{
-Parsed API response.
+A data frame built from the upload task result rows returned by the
+API.
 }
 \description{
 Mirrors the CatMapperJS edit-page upload call to \code{/uploadInputNodes}.
@@ -56,15 +68,22 @@ the requested write action.
 \details{
 CatMapR does not manage username/password login flows. It sends
 API-key-authenticated requests and the CatMapper API identifies the acting
-user on the server side. For \code{so = "simple"}, CatMapR checks the
-selected key column and warns if preformatted key expressions are supplied;
-it strips the left-hand side before upload so the API does not produce
-malformed \code{Key == ... == ...} strings.
+user on the server side. For \code{so = "simple"}, only
+\code{ao = "add_uses"} is supported and key values in the selected key
+column must be raw values without \code{==}.
 }
 \examples{
 \dontrun{
-uploadInputNodes(
-  df = data.frame(CMName = "Yoruba", Name = "Yoruba", Key = "eth:yoruba", stringsAsFactors = FALSE),
+upload_result <- uploadInputNodes(
+  df = data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    CMID = "",
+    Key = "Type == Adamana Brown",
+    datasetID = "SD1",
+    label = "ETHNICITY",
+    stringsAsFactors = FALSE
+  ),
   database = "SocioMap",
   formData = list(
     domain = "ETHNICITY",
@@ -76,9 +95,12 @@ uploadInputNodes(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "simple",
+  so = "standard",
   ao = "add_uses",
+  poll_interval_seconds = 1,
+  timeout_seconds = 600,
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
+head(upload_result)
 }
 }

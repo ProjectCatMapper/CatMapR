@@ -25,7 +25,6 @@ The following exported functions are considered stable and should not receive br
 
 ### Edit/upload
 - `uploadInputNodes()`
-- `updateWaitingUSES()`
 - `submitEditUpload()`
 
 ### Metadata introspection
@@ -62,7 +61,7 @@ CatMapR currently calls these API endpoints. Breaking changes to these endpoints
 - `POST /joinDatasets`
 - `POST /proposeMergeSubmit`
 - `POST /uploadInputNodes`
-- `POST /updateWaitingUSES`
+- `POST /updateWaitingUSES` (internal post-upload trigger used by `submitEditUpload()`)
 
 ### Endpoint Compatibility Rules
 - Do not remove these endpoints without introducing versioned replacements.

@@ -73,7 +73,7 @@ User-owned/raw datasets are external inputs to your R workflow.
 | `/:database/explore` | Search categories/entities and inspect details | `searchDatabase()`, `CMIDinfo()`, `getDomains()` |
 | `/:database/translate` | Upload labels, run matching, review translated outputs | `translate()` |
 | `/:database/merge` | Propose merge keys and join aligned datasets | `createLinkfile()`, `joinDatasets()` |
-| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `getUploadProperties()`, `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `getUploadProperties()`, `uploadInputNodes()`, `submitEditUpload()` |
 
 ## UI Workflow Crosswalk (Detailed)
 
@@ -86,7 +86,7 @@ User-owned/raw datasets are external inputs to your R workflow.
 | Harmonize labels | `/:database/translate` | Upload table and run translation | `translate(rows, database, term, ...)` |
 | Build merge candidates | `/:database/merge` | Propose merge linkfile | `createLinkfile(categoryLabel, datasetChoices, ...)` |
 | Join aligned sources | `/:database/merge` | Run join on matched keys | `joinDatasets(database, joinLeft, joinRight, ...)` |
-| Submit metadata/category edits | `/:database/edit` | Upload edit rows and refresh USES | `submitEditUpload(...)` or `uploadInputNodes(...)` + `updateWaitingUSES(...)` |
+| Submit metadata/category edits | `/:database/edit` | Upload edit rows and auto-trigger contextual USES refresh | `submitEditUpload(...)` (preferred) or `uploadInputNodes(...)` |
 
 ## Setup
 
@@ -286,17 +286,22 @@ CatMapR does not manage username/password login flows.
 
 Key format depends on upload mode:
 
-- `so = "standard"` expects full key expressions in the selected key column (for example `VARIABLE == VALUE`).
-- `so = "simple"` expects raw values only (for example `eth:yoruba`) without `==`.
+- `so = "standard"` (recommended) expects full key expressions in the selected key column (for example `VARIABLE == VALUE`).
+- `so = "simple"` is only supported with `ao = "add_uses"` and expects raw values only (for example `eth:yoruba`) without `==`.
 
-If preformatted key expressions are provided in `so = "simple"`, CatMapR warns
-and strips the left-hand side before upload.
+If preformatted key expressions are provided in `so = "simple"`, CatMapR
+raises an error and requires `so = "standard"`.
+
+After upload submission, CatMapR automatically triggers contextual USES relationship refresh in the graph database based on USES properties that connect to other CMIDs. This trigger is fire-and-forget and is not polled for completion.
 
 ```{r write-flow, eval = FALSE}
 upload_payload <- data.frame(
   CMName = "Yoruba",
   Name = "Yoruba",
-  Key = "eth:yoruba",
+  CMID = "",
+  Key = "Type == Adamana Brown",
+  datasetID = "SD1",
+  label = "ETHNICITY",
   stringsAsFactors = FALSE
 )
 
@@ -313,10 +318,40 @@ result <- submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "simple",
+  so = "standard",
   ao = "add_uses",
-  api_key = Sys.getenv("CATMAPR_API_KEY")
+  api_key = Sys.getenv("CATMAPR_API_KEY"),
+  poll_interval_seconds = 1,
+  timeout_seconds = 600
 )
 
-str(result)
+head(result)
+```
+
+```{r write-flow-update-add, eval = FALSE}
+update_add_payload <- data.frame(
+  CMID = "SM123",
+  Key = "Type == Adamana Brown",
+  datasetID = "SD1",
+  variable = "CeramicType",
+  stringsAsFactors = FALSE
+)
+
+submitEditUpload(
+  df = update_add_payload,
+  database = "SocioMap",
+  formData = list(
+    domain = "ETHNICITY",
+    subdomain = "ETHNICITY",
+    datasetID = "SD1",
+    cmNameColumn = "CMName",
+    categoryNamesColumn = "Name",
+    cmidColumn = "CMID",
+    keyColumn = "Key"
+  ),
+  so = "standard",
+  ao = "update_add",
+  optionalProperties = c("variable"),
+  api_key = Sys.getenv("CATMAPR_API_KEY")
+)
 ```

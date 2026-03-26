@@ -51,9 +51,12 @@ remotes::install_github("projectCatMapper/CatMapR")
 - **`getDomains()`**: Retrieve CatMapper domain/subdomain metadata.
 - **`getUploadProperties()`**: Retrieve upload-oriented property metadata grouped into node and USES relationship fields.
 - **`getProperties()`**: Retrieve flattened property metadata from API deployments that expose `/metadata/properties/<database>`.
+- **`build_key()`**: Build upload-ready key expressions in `FIELD == VALUE` format.
+- **`normalize_key()`**: Normalize stored-form keys for reuse in upload workflows.
+- **`is_normalized_key()`**: Check whether key values are upload-ready expressions.
+- **`prepare_edit_upload()`**: Validate upload payload shape and mode before write calls.
 - **`uploadInputNodes()`**: Upload edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required).
-- **`updateWaitingUSES()`**: Trigger `/updateWaitingUSES` after uploads (write operation; API key required).
-- **`submitEditUpload()`**: Run the same two-step flow as the CatMapperJS edit page: upload, then waiting-USES refresh.
+- **`submitEditUpload()`**: Run the edit upload flow and automatically trigger waiting-USES contextual relationship refresh in the background.
 
 ### Legacy-compatible aliases
 
@@ -83,7 +86,7 @@ remotes::install_github("projectCatMapper/CatMapR")
 | `/:database/explore` | Search and inspect entities/categories | `searchDatabase()`, `CMIDinfo()`, `getDomains()` |
 | `/:database/translate` | Translate labels and review proposed matches | `translate()` |
 | `/:database/merge` | Propose key mappings and join aligned tables | `createLinkfile()`, `joinDatasets()` |
-| `/:database/edit` | Authenticated edit upload and waiting-USES refresh | `getUploadProperties()`, `uploadInputNodes()`, `updateWaitingUSES()`, `submitEditUpload()` |
+| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `getUploadProperties()`, `uploadInputNodes()`, `submitEditUpload()` |
 
 ## Usage
 
@@ -105,10 +108,12 @@ Write endpoints (for example uploads) require a valid API key from a registered 
 Sys.setenv(CATMAPR_API_KEY = "cmk_your_api_key")
 ```
 
+CatMapR reads `CATMAPR_API_KEY` first, and falls back to `CATMAPPER_API_KEY` when needed.
+
 - How to get an API key: https://catmapper.org/help/API.html#api-key-access
-- For write calls, CatMapper identifies the acting user from the API key on the server side.
+- For write upload calls, CatMapper identifies the acting user from the API key on the server side.
 - Server-side permissions determine whether that user can run the requested write action.
-- CatMapR does not implement username/password login flows; it sends API-key-authenticated requests to the API.
+- CatMapR does not implement username/password login flows; it sends API-key-authenticated requests for write uploads.
 
 ### Retrieve Dataset Catalog Metadata
 
@@ -133,6 +138,9 @@ print(dataset_meta)
 # dataset_meta <- datasetInfo(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
 # print(dataset_meta)
 ```
+
+Returned metadata keys can be stored-form values (for example `Key == Region == Flagstaff`).
+Use `normalize_key()` before reusing keys in upload payloads.
 
 ### Retrieve Domain Metadata
 
@@ -225,16 +233,30 @@ print(translated_df$file)
 
 Key format depends on upload mode:
 
-- `so = "standard"`: `Key` values must already be full expressions like `VARIABLE == VALUE` (and may include `&&`).
-- `so = "simple"`: `Key` values must be raw values only (for example `eth:yoruba`) and should not include `==`.
+- `so = "standard"` (recommended): `Key` values must already be full expressions like `VARIABLE == VALUE` (and may include `&&`).
+- `so = "simple"`: only supported with `ao = "add_uses"` and key values must be raw values only (for example `eth:yoruba`) with no `==`.
 
-If `so = "simple"` receives `VARIABLE == VALUE`, CatMapR warns and strips the left-hand side before sending the payload.
+If `so = "simple"` receives preformatted keys (contains `==`), CatMapR raises an error and requires `so = "standard"`.
+
+After upload submission, CatMapR automatically triggers contextual USES relationship refresh in the graph database based on USES properties that connect to other CMIDs. This refresh is fire-and-forget and is not polled for completion.
+
+For metadata reuse, normalize stored-form keys before upload:
+
+```r
+normalize_key("Key == Region == Flagstaff")
+# "Region == Flagstaff"
+```
+
+#### Add USES ties (`ao = "add_uses"`, standard mode)
 
 ```r
 upload_payload <- data.frame(
   CMName = "Yoruba",
   Name = "Yoruba",
-  Key = "eth:yoruba",
+  CMID = "",
+  Key = "Type == Adamana Brown",
+  datasetID = "SD1",
+  label = "ETHNICITY",
   stringsAsFactors = FALSE
 )
 
@@ -251,12 +273,74 @@ result <- submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "simple",
+  so = "standard",
   ao = "add_uses",
-  api_key = Sys.getenv("CATMAPR_API_KEY")
+  api_key = Sys.getenv("CATMAPR_API_KEY"),
+  poll_interval_seconds = 1,
+  timeout_seconds = 600
 )
 
-print(result$upload)
+head(result)
+```
+
+#### Update existing USES properties (`ao = "update_add"`)
+
+```r
+update_add_payload <- data.frame(
+  CMID = "SM123",
+  Key = "Type == Adamana Brown",
+  datasetID = "SD1",
+  variable = "CeramicType",
+  stringsAsFactors = FALSE
+)
+
+submitEditUpload(
+  df = update_add_payload,
+  database = "SocioMap",
+  formData = list(
+    domain = "ETHNICITY",
+    subdomain = "ETHNICITY",
+    datasetID = "SD1",
+    cmNameColumn = "CMName",
+    categoryNamesColumn = "Name",
+    cmidColumn = "CMID",
+    keyColumn = "Key"
+  ),
+  so = "standard",
+  ao = "update_add",
+  optionalProperties = c("variable"),
+  api_key = Sys.getenv("CATMAPR_API_KEY")
+)
+```
+
+#### Replace existing USES properties (`ao = "update_replace"`)
+
+```r
+update_replace_payload <- data.frame(
+  CMID = "SM123",
+  Key = "Type == Adamana Brown",
+  NewKey = "Type == Tusayan Gray",
+  datasetID = "SD1",
+  stringsAsFactors = FALSE
+)
+
+submitEditUpload(
+  df = update_replace_payload,
+  database = "SocioMap",
+  formData = list(
+    domain = "ETHNICITY",
+    subdomain = "ETHNICITY",
+    datasetID = "SD1",
+    cmNameColumn = "CMName",
+    categoryNamesColumn = "Name",
+    cmidColumn = "CMID",
+    keyColumn = "Key"
+  ),
+  so = "standard",
+  ao = "update_replace",
+  optionalProperties = c("NewKey"),
+  api_key = Sys.getenv("CATMAPR_API_KEY")
+)
 ```
 
 ### Merge Template Endpoints (No API Key Required)

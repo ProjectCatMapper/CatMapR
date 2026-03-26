@@ -22,6 +22,8 @@ the request fails.
 \description{
 Preferred metadata-focused alias for \code{\link[=datasetInfo]{datasetInfo()}}.
 This function returns dataset metadata records, not raw dataset files.
+Returned \code{Key} values can be stored-form keys (for example prefixed with
+\verb{Key == }) and may need normalization before reuse in upload workflows.
 }
 \examples{
 \dontrun{

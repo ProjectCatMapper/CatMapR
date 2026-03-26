@@ -34,7 +34,6 @@ reference:
   - title: Edit and upload
     contents:
       - uploadInputNodes
-      - updateWaitingUSES
       - submitEditUpload
   - title: Metadata introspection
     contents:
