@@ -414,9 +414,15 @@ wait_for_upload_task <- function(task_id,
 }
 
 upload_status_to_dataframe <- function(status) {
-  file_data <- status$file
+  file_data <- status$file %||%
+    status$resultFile %||%
+    status$data %||%
+    status$rows %||%
+    status$result
   out <- normalize_table(file_data)
-  desired_order <- status$order
+  desired_order <- status$order %||%
+    status$resultOrder %||%
+    status$columns
   if (is.character(desired_order) && length(desired_order) > 0) {
     present <- desired_order[desired_order %in% names(out)]
     remainder <- setdiff(names(out), present)
@@ -540,6 +546,7 @@ validate_simple_mode_selection <- function(so, ao) {
 }
 
 resolve_api_key <- function(api_key = NULL) {
+  api_help_url <- "https://help.catmapper.org/API.html"
   if (!is.null(api_key) && nzchar(api_key)) {
     return(api_key)
   }
@@ -556,7 +563,8 @@ resolve_api_key <- function(api_key = NULL) {
   stop(
     paste0(
       "An API key is required for write operations from a registered CatMapper account. ",
-      "Set `api_key`, `CATMAPR_API_KEY` (preferred), or `CATMAPPER_API_KEY`."
+      "Set `api_key`, `CATMAPR_API_KEY` (preferred), or `CATMAPPER_API_KEY`. ",
+      "If your key is missing or invalid, see ", api_help_url
     ),
     call. = FALSE
   )

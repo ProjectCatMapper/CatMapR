@@ -582,6 +582,11 @@ test_that("uploadInputNodes requires API key", {
     "API key is required",
     fixed = TRUE
   )
+  expect_error(
+    CatMapR::uploadInputNodes(df = data.frame(), database = "SocioMap", formData = list()),
+    "https://help.catmapper.org/API.html",
+    fixed = TRUE
+  )
 })
 
 test_that("uploadInputNodes polls task status and returns server dataframe", {
@@ -794,6 +799,65 @@ test_that("uploadInputNodes standard mode accepts preformatted composite keys", 
   expect_s3_class(result, "data.frame")
   expect_identical(captured$calls, c("uploadInputNodes", "uploadInputNodesStatus"))
   expect_identical(captured$key, "language == yoruba && country == ng")
+})
+
+test_that("uploadInputNodes accepts completed payloads that return `data` and `resultOrder` keys", {
+  captured <- new.env(parent = emptyenv())
+  captured$calls <- character(0)
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$calls <- c(captured$calls, endpoint)
+      if (endpoint == "uploadInputNodes") {
+        return(list(taskId = "task-123", status = "queued"))
+      }
+      if (endpoint == "uploadInputNodesStatus") {
+        return(
+          list(
+            taskId = "task-123",
+            status = "completed",
+            data = list(list(CMID = "SM2", Key = "language == edo", variable = "Languoid")),
+            resultOrder = c("CMID", "Key", "variable")
+          )
+        )
+      }
+      stop(sprintf("Unexpected endpoint: %s", endpoint), call. = FALSE)
+    },
+    .package = "CatMapR"
+  )
+
+  rows <- data.frame(
+    CMName = "Edo",
+    Name = "Edo",
+    CMID = "SM2",
+    Key = "language == edo",
+    datasetID = "SD1",
+    stringsAsFactors = FALSE
+  )
+
+  result <- CatMapR::uploadInputNodes(
+    df = rows,
+    database = "SocioMap",
+    formData = list(
+      domain = "LANGUAGE",
+      subdomain = "LANGUAGE",
+      datasetID = "SD1",
+      cmNameColumn = "CMName",
+      categoryNamesColumn = "Name",
+      cmidColumn = "CMID",
+      keyColumn = "Key"
+    ),
+    so = "standard",
+    ao = "add_uses",
+    api_key = "cmk_abc123",
+    poll_interval_seconds = 0.001,
+    timeout_seconds = 1
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(names(result), c("CMID", "Key", "variable"))
+  expect_identical(result$CMID[[1]], "SM2")
+  expect_identical(captured$calls, c("uploadInputNodes", "uploadInputNodesStatus"))
 })
 
 test_that("uploadInputNodes times out when task does not complete", {

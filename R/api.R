@@ -52,6 +52,7 @@ callAPI <- function(endpoint,
                     url = NULL,
                     type = "default",
                     headers = NULL) {
+  api_help_url <- "https://help.catmapper.org/API.html"
   endpoint <- validate_scalar_character(endpoint, "endpoint")
   request <- validate_choice(toupper(request), c("GET", "POST"), "request")
   type <- validate_choice(type, c("default", "stream"), "type")
@@ -116,6 +117,16 @@ callAPI <- function(endpoint,
       result_content
     } else {
       sprintf("HTTP %s", status_code)
+    }
+    if (status_code %in% c(401, 403)) {
+      stop(
+        paste0(
+          "Not authorized: missing or invalid API key/token. ",
+          "Server response: ", err_msg, " ",
+          "See ", api_help_url
+        ),
+        call. = FALSE
+      )
     }
     stop(err_msg, call. = FALSE)
   }
