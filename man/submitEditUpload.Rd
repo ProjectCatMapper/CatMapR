@@ -25,7 +25,11 @@ submitEditUpload(
 
 \item{formData}{Named list matching the edit-page \code{formData} payload.}
 
-\item{so}{Upload mode, usually \code{"standard"} or \code{"simple"}.}
+\item{so}{Upload mode, usually \code{"standard"} or \code{"simple"}.
+Use \code{"standard"} when the upload key values are already full key
+expressions (for example \code{VARIABLE == VALUE}). Use \code{"simple"}
+when key values are raw terms only (for example \code{eth:yoruba}) without
+the \code{==} expression.}
 
 \item{ao}{Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.}
 

@@ -2,6 +2,12 @@
 
 # CatMapR
 
+## Package Documentation
+
+Project page (package docs): https://projectcatmapper.github.io/CatMapR/
+
+This site contains the CatMapR package documentation, including function reference pages, articles, and usage guidance.
+
 <p>
   <img src="man/figures/catmapper-logo.webp" alt="CatMapper logo" height="15" />
   <img src="man/figures/sociomap-logo.webp" alt="SocioMap logo" height="17" />
@@ -178,6 +184,13 @@ print(translated_df$file)
 ```
 
 ### Upload Edit-Page Data (Write API)
+
+Key format depends on upload mode:
+
+- `so = "standard"`: `Key` values must already be full expressions like `VARIABLE == VALUE` (and may include `&&`).
+- `so = "simple"`: `Key` values must be raw values only (for example `eth:yoruba`) and should not include `==`.
+
+If `so = "simple"` receives `VARIABLE == VALUE`, CatMapR warns and strips the left-hand side before sending the payload.
 
 ```r
 upload_payload <- data.frame(

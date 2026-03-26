@@ -392,6 +392,96 @@ test_that("uploadInputNodes mirrors edit upload payload and includes API-key met
   expect_identical(captured$parameters$addoptions, list(district = FALSE, recordyear = FALSE))
 })
 
+test_that("uploadInputNodes simple mode warns and strips preformatted key expressions", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      captured$headers <- headers
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  rows <- data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    Key = "language == yoruba",
+    stringsAsFactors = FALSE
+  )
+
+  expect_warning(
+    result <- CatMapR::uploadInputNodes(
+      df = rows,
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "simple",
+      ao = "add_uses",
+      api_key = "cmk_abc123"
+    ),
+    "`so = \"simple\"` expects raw key values",
+    fixed = TRUE
+  )
+
+  expect_equal(result, list(ok = TRUE))
+  expect_identical(captured$parameters$df[[1]]$Key, "yoruba")
+})
+
+test_that("uploadInputNodes simple mode rejects compound key expressions", {
+  captured <- new.env(parent = emptyenv())
+  captured$called <- FALSE
+
+  local_mocked_bindings(
+    callAPI = function(...) {
+      captured$called <- TRUE
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  rows <- data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    Key = "language == yoruba && country == ng",
+    stringsAsFactors = FALSE
+  )
+
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = rows,
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "simple",
+      ao = "add_uses",
+      api_key = "cmk_abc123"
+    ),
+    "must use `so = \"standard\"`",
+    fixed = TRUE
+  )
+
+  expect_false(captured$called)
+})
+
 test_that("updateWaitingUSES uses env API key when api_key argument is omitted", {
   original <- Sys.getenv("CATMAPR_API_KEY", unset = NA_character_)
   on.exit({

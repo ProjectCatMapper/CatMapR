@@ -24,7 +24,11 @@ uploadInputNodes(
 
 \item{formData}{Named list matching the edit-page \code{formData} payload.}
 
-\item{so}{Upload mode, usually \code{"standard"} or \code{"simple"}.}
+\item{so}{Upload mode, usually \code{"standard"} or \code{"simple"}.
+Use \code{"standard"} when the upload key values are already full key
+expressions (for example \code{VARIABLE == VALUE}). Use \code{"simple"}
+when key values are raw terms only (for example \code{eth:yoruba}) without
+the \code{==} expression.}
 
 \item{ao}{Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.}
 
@@ -52,7 +56,10 @@ the requested write action.
 \details{
 CatMapR does not manage username/password login flows. It sends
 API-key-authenticated requests and the CatMapper API identifies the acting
-user on the server side.
+user on the server side. For \code{so = "simple"}, CatMapR checks the
+selected key column and warns if preformatted key expressions are supplied;
+it strips the left-hand side before upload so the API does not produce
+malformed \code{Key == ... == ...} strings.
 }
 \examples{
 \dontrun{

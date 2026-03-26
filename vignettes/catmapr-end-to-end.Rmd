@@ -253,6 +253,14 @@ account and are shown as a template only. The server identifies the acting
 user from the API key and enforces permissions for write endpoints.
 CatMapR does not manage username/password login flows.
 
+Key format depends on upload mode:
+
+- `so = "standard"` expects full key expressions in the selected key column (for example `VARIABLE == VALUE`).
+- `so = "simple"` expects raw values only (for example `eth:yoruba`) without `==`.
+
+If preformatted key expressions are provided in `so = "simple"`, CatMapR warns
+and strips the left-hand side before upload.
+
 ```{r write-flow, eval = FALSE}
 upload_payload <- data.frame(
   CMName = "Yoruba",
