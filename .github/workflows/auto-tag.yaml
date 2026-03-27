@@ -1,0 +1,44 @@
+name: Auto Tag
+
+on:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create next patch tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          latest_tag="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
+
+          if [[ -z "${latest_tag}" ]]; then
+            next_tag="v0.0.1"
+          else
+            version="${latest_tag#v}"
+            IFS='.' read -r major minor patch <<< "${version}"
+            next_patch=$((patch + 1))
+            next_tag="v${major}.${minor}.${next_patch}"
+          fi
+
+          echo "Latest tag: ${latest_tag:-<none>}"
+          echo "Next tag: ${next_tag}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "${next_tag}" -m "Auto tag ${next_tag}"
+          git push origin "${next_tag}"
