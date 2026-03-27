@@ -35,19 +35,14 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxml2-dev libcurl4-openssl-dev
+          sudo apt-get install -y libxml2-dev libcurl4-openssl-dev cmake
         if: runner.os == 'Linux'
 
       - name: Install R package dependencies
-        run: |
-          install.packages('remotes')
-          remotes::install_deps(dependencies = TRUE)
-        shell: Rscript {0}
-
-      - name: Install rcmdcheck
-        run: |
-          install.packages('rcmdcheck')
-        shell: Rscript {0}
+        uses: r-lib/actions/setup-r-dependencies@v3
+        with:
+          extra-packages: any::rcmdcheck, any::testthat, any::roxygen2
+          needs: check
 
       - name: Run R CMD check
         run: |
