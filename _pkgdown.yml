@@ -35,6 +35,10 @@ reference:
     contents:
       - uploadInputNodes
       - submitEditUpload
+      - prepare_edit_upload
+      - build_key
+      - normalize_key
+      - is_normalized_key
   - title: Metadata introspection
     contents:
       - getDomains
@@ -45,3 +49,4 @@ articles:
   - title: Vignettes
     contents:
       - catmapr-end-to-end
+      - safe-upload-patterns
