@@ -1,4 +1,4 @@
-# CatMapR 0.1.2.9000
+# CatMapR 0.1.2.9000 (unreleased; noted 2026-03-27)
 
 - Added metadata-introspection wrappers `getDomains()`, `getProperties()`, and `getUploadProperties()`.
 - Added tests for metadata/property wrapper behavior, endpoint construction, and API error handling.
@@ -8,7 +8,7 @@
 - Cleaned packaging hygiene by excluding generated vignette outputs from builds and removing stale tracked build artifacts from the repo.
 - Note: `getProperties()` depends on API deployments that expose `/metadata/properties/<database>`. During rollout, some deployments may support `getUploadProperties()` before `getProperties()`.
 
-# CatMapR 0.1.2
+# CatMapR 0.1.2 (2026-03-18)
 
 - Normalized package metadata for CRAN submission (`Title`, `Version`, `License`,
   `URL`, and `BugReports`).
