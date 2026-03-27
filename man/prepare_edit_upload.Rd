@@ -23,7 +23,14 @@ prepare_edit_upload(
 
 \item{so}{Upload mode, usually \code{"standard"} or \code{"simple"}.}
 
-\item{ao}{Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.}
+\item{ao}{Advanced upload option. Supported values map directly to CatMapper
+Edit-page Advanced options:
+\itemize{
+\item \code{"add_node"} = "Adding new node for every row"
+\item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
+\item \code{"update_add"} = "Updating existing USES only--add or add to properties"
+\item \code{"update_replace"} = "Updating existing USES only--replace one property"
+}}
 
 \item{allContext}{Optional vector/list of contextual columns.}
 

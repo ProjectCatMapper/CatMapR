@@ -21,6 +21,23 @@ metadata. This vignette focuses on safe defaults and repeatable patterns.
 - `so = "standard"` (recommended): provide fully formed `Key` expressions such as `Type == Adamana Brown`.
 - `so = "simple"`: only valid with `ao = "add_uses"` and raw key values without `==`.
 
+## Full `ao` to Edit GUI mapping
+
+This crosswalk maps CatMapR `ao` values to the exact labels shown in the
+CatMapper Edit page (**Advanced** upload options).
+
+| CatMapR `ao` value | Edit page GUI value | Typical purpose |
+| --- | --- | --- |
+| `add_node` | `Adding new node for every row` | Create new category or dataset nodes from upload rows. |
+| `add_uses` | `Adding new uses ties (with old or new nodes)` | Create dataset-to-category `USES` ties. |
+| `update_add` | `Updating existing USES only--add or add to properties` | Add one or more properties to existing `USES` ties. |
+| `update_replace` | `Updating existing USES only--replace one property` | Replace an existing property value on `USES` ties. |
+
+Notes:
+
+- `so = "simple"` is supported only when `ao = "add_uses"`.
+- For `so = "standard"`, required columns vary by `ao` and are validated before upload.
+
 ## Key helper patterns
 
 ```{r key-helpers, eval=FALSE}

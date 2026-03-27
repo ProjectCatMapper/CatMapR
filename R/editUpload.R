@@ -14,7 +14,14 @@
 #'   expressions (for example \code{VARIABLE == VALUE}). Use \code{"simple"}
 #'   when key values are raw terms only (for example \code{eth:yoruba}) without
 #'   the \code{==} expression.
-#' @param ao Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.
+#' @param ao Advanced upload option. Supported values map directly to CatMapper
+#'   Edit-page Advanced options:
+#'   \itemize{
+#'   \item \code{"add_node"} = "Adding new node for every row"
+#'   \item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
+#'   \item \code{"update_add"} = "Updating existing USES only--add or add to properties"
+#'   \item \code{"update_replace"} = "Updating existing USES only--replace one property"
+#'   }
 #' @param addoptions Named list with \code{district} and \code{recordyear} booleans.
 #' @param allContext Optional vector/list of contextual columns.
 #' @param optionalProperties Optional vector/list alias for \code{allContext}.
@@ -33,7 +40,9 @@
 #'   API-key-authenticated requests and the CatMapper API identifies the acting
 #'   user on the server side. For \code{so = "simple"}, only
 #'   \code{ao = "add_uses"} is supported and key values in the selected key
-#'   column must be raw values without \code{==}.
+#'   column must be raw values without \code{==}. For the full \code{ao}
+#'   crosswalk and examples, see
+#'   \code{vignette("safe-upload-patterns", package = "CatMapR")}.
 #' @export
 #'
 #' @examples
@@ -281,7 +290,14 @@ submitEditUpload <- function(df,
 #' @param df Data frame or list of row objects to upload.
 #' @param formData Named list matching the edit-page \code{formData} payload.
 #' @param so Upload mode, usually \code{"standard"} or \code{"simple"}.
-#' @param ao Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.
+#' @param ao Advanced upload option. Supported values map directly to CatMapper
+#'   Edit-page Advanced options:
+#'   \itemize{
+#'   \item \code{"add_node"} = "Adding new node for every row"
+#'   \item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
+#'   \item \code{"update_add"} = "Updating existing USES only--add or add to properties"
+#'   \item \code{"update_replace"} = "Updating existing USES only--replace one property"
+#'   }
 #' @param allContext Optional vector/list of contextual columns.
 #' @param optionalProperties Optional vector/list alias for \code{allContext}.
 #' @param mergingType Optional merging mode used by merge upload workflows.
