@@ -6,7 +6,7 @@
 #'
 #' @param database Target database, typically \code{"SocioMap"} or
 #'   \code{"ArchaMap"}.
-#' @param datasetID Dataset CMID whose merge template should be retrieved.
+#' @param dataset_id Dataset CMID whose merge template should be retrieved.
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used
 #'   when set.
 #'
@@ -15,14 +15,14 @@
 #'
 #' @examples
 #' \dontrun{
-#' tmpl <- getMergingTemplate(database = "ArchaMap", datasetID = "AD947")
+#' tmpl <- get_merge_template(database = "ArchaMap", dataset_id = "AD947")
 #' head(tmpl)
 #' }
-getMergingTemplate <- function(database, datasetID, url = NULL) {
+get_merge_template <- function(database, dataset_id, url = NULL) {
   database <- validate_database(database)
-  datasetID <- validate_scalar_character(datasetID, "datasetID")
+  dataset_id <- validate_scalar_character(dataset_id, "dataset_id")
 
-  endpoint <- paste("merge", "template", database, datasetID, sep = "/")
+  endpoint <- paste("merge", "template", database, dataset_id, sep = "/")
   callAPI(endpoint = endpoint, parameters = list(), request = "GET", url = url)
 }
 
@@ -46,11 +46,11 @@ getMergingTemplate <- function(database, datasetID, url = NULL) {
 #'
 #' @examples
 #' \dontrun{
-#' summary <- getMergingTemplateSummary(database = "ArchaMap", cmid = "AMM1")
+#' summary <- get_merge_template_summary(database = "ArchaMap", cmid = "AMM1")
 #' summary$nodeType
 #' summary$mergingTies
 #' }
-getMergingTemplateSummary <- function(database, cmid, url = NULL) {
+get_merge_template_summary <- function(database, cmid, url = NULL) {
   database <- validate_database(database)
   cmid <- validate_scalar_character(cmid, "cmid")
 
@@ -83,10 +83,10 @@ getMergingTemplateSummary <- function(database, cmid, url = NULL) {
 #'   stringsAsFactors = FALSE
 #' )
 #'
-#' result <- createMergeSyntax(template = template, database = "ArchaMap")
+#' result <- build_merge_syntax(template = template, database = "ArchaMap")
 #' result$download
 #' }
-createMergeSyntax <- function(template, database, url = NULL) {
+build_merge_syntax <- function(template, database, url = NULL) {
   database <- validate_database(database)
   if (!is.data.frame(template) && !is.list(template)) {
     stop("`template` must be a data frame or a list of row objects.", call. = FALSE)

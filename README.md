@@ -41,27 +41,21 @@ remotes::install_github("projectCatMapper/CatMapR")
 
 ### Preferred public functions
 
-- **`listDatasetMetadata()`**: List dataset catalog metadata for `SocioMap` or `ArchaMap`.
-- **`getDatasetMetadata()`**: Retrieve metadata for a specific dataset CMID.
-- **`CMIDinfo()`**: Fetch details about a specific entity by CatMapper ID (CMID).
-- **`searchDatabase()`**: Search for terms within a database, optionally filtering by domain, property, year, and context.
-- **`translate()`**: Translate terms within data frames by matching specified properties and domains.
-- **`createLinkfile()`**: Propose merge keys for selected datasets within a category domain.
-- **`joinDatasets()`**: Join two aligned datasets through CatMapper matching infrastructure.
-- **`getDomains()`**: Retrieve CatMapper domain/subdomain metadata.
-- **`getUploadProperties()`**: Retrieve upload-oriented property metadata grouped into node and USES relationship fields.
-- **`getProperties()`**: Retrieve flattened property metadata from API deployments that expose `/metadata/properties/<database>`.
+- **`list_datasets()`**: List dataset catalog metadata for `SocioMap` or `ArchaMap`.
+- **`get_dataset_metadata()`**: Retrieve metadata for a specific dataset CMID.
+- **`get_cmid_info()`**: Fetch details about a specific entity by CatMapper ID (CMID).
+- **`search_database()`**: Search for terms within a database, optionally filtering by domain, property, year, and context.
+- **`translate_rows()`**: Translate terms within data frames by matching specified properties and domains.
+- **`propose_merge_links()`**: Propose merge keys for selected datasets within a category domain.
+- **`join_datasets()`**: Join two aligned datasets through CatMapper matching infrastructure.
+- **`get_domains()`**: Retrieve CatMapper domain/subdomain metadata.
+- **`get_upload_properties()`**: Retrieve upload-oriented property metadata grouped into node and USES relationship fields.
+- **`get_properties()`**: Retrieve flattened property metadata from API deployments that expose `/metadata/properties/<database>`.
 - **`build_key()`**: Build upload-ready key expressions in `FIELD == VALUE` format.
 - **`normalize_key()`**: Normalize stored-form keys for reuse in upload workflows.
 - **`is_normalized_key()`**: Check whether key values are upload-ready expressions.
-- **`prepare_edit_upload()`**: Validate upload payload shape and mode before write calls.
-- **`uploadInputNodes()`**: Upload edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required).
-- **`submitEditUpload()`**: Run the edit upload flow and automatically trigger waiting-USES contextual relationship refresh in the background.
-
-### Legacy-compatible aliases
-
-- **`allDatasets()`**: Legacy-compatible alias for `listDatasetMetadata()`.
-- **`datasetInfo()`**: Legacy-compatible alias for `getDatasetMetadata()`.
+- **`prepare_upload_rows()`**: Validate upload payload shape before write calls.
+- **`upload_rows()`**: Upload edit-page rows to CatMapper's `/uploadInputNodes` endpoint (write operation; API key required), then automatically trigger waiting-USES contextual refresh in the background.
 
 ### Internal helper
 
@@ -69,8 +63,8 @@ remotes::install_github("projectCatMapper/CatMapR")
 
 ### Metadata helper notes
 
-- `getUploadProperties()` targets the canonical production API and is intended for upload/edit introspection.
-- `getProperties()` depends on deployments that expose `GET /metadata/properties/<database>`. During rollout, some deployments may support `getUploadProperties()` before `getProperties()`.
+- `get_upload_properties()` targets the canonical production API and is intended for upload/edit introspection.
+- `get_properties()` depends on deployments that expose `GET /metadata/properties/<database>`. During rollout, some deployments may support `get_upload_properties()` before `get_properties()`.
 
 ### What CatMapR Returns
 
@@ -83,10 +77,10 @@ remotes::install_github("projectCatMapper/CatMapR")
 
 | CatMapperJS route | UI workflow | CatMapR functions |
 | --- | --- | --- |
-| `/:database/explore` | Search and inspect entities/categories | `searchDatabase()`, `CMIDinfo()`, `getDomains()` |
-| `/:database/translate` | Translate labels and review proposed matches | `translate()` |
-| `/:database/merge` | Propose key mappings and join aligned tables | `createLinkfile()`, `joinDatasets()` |
-| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `getUploadProperties()`, `uploadInputNodes()`, `submitEditUpload()` |
+| `/:database/explore` | Search and inspect entities/categories | `search_database()`, `get_cmid_info()`, `get_domains()` |
+| `/:database/translate` | Translate labels and review proposed matches | `translate_rows()` |
+| `/:database/merge` | Propose key mappings and join aligned tables | `propose_merge_links()`, `join_datasets()` |
+| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `get_upload_properties()`, `upload_rows()` |
 
 ## Usage
 
@@ -119,24 +113,17 @@ CatMapR reads `CATMAPR_API_KEY` first, and falls back to `CATMAPPER_API_KEY` whe
 
 ```r
 # Preferred metadata-focused alias
-dataset_catalog <- listDatasetMetadata(database = "SocioMap")
+dataset_catalog <- list_datasets(database = "SocioMap")
 print(dataset_catalog)
 
-# Legacy equivalent
-# all_datasets <- allDatasets(database = "SocioMap")
-# print(all_datasets)
 ```
 
 ### Retrieve Metadata for a Dataset CMID
 
 ```r
 # Preferred metadata-focused alias
-dataset_meta <- getDatasetMetadata(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
+dataset_meta <- get_dataset_metadata(database = "SocioMap", cmid = "SD1", domain = "CATEGORY")
 print(dataset_meta)
-
-# Legacy equivalent
-# dataset_meta <- datasetInfo(database = "SocioMap", CMID = "SD1", domain = "CATEGORY")
-# print(dataset_meta)
 ```
 
 Returned metadata keys can be stored-form values (for example `Key == Region == Flagstaff`).
@@ -145,14 +132,14 @@ Use `normalize_key()` before reusing keys in upload payloads.
 ### Retrieve Domain Metadata
 
 ```r
-domains <- getDomains(database = "ArchaMap")
+domains <- get_domains(database = "ArchaMap")
 head(domains)
 ```
 
 ### Retrieve Upload-Oriented Property Metadata
 
 ```r
-upload_props <- getUploadProperties(database = "ArchaMap")
+upload_props <- get_upload_properties(database = "ArchaMap")
 head(upload_props$nodeProperties)
 head(upload_props$usesProperties)
 ```
@@ -161,7 +148,7 @@ head(upload_props$usesProperties)
 
 ```r
 # This wrapper depends on API deployments exposing /metadata/properties/<database>
-# properties <- getProperties(database = "ArchaMap")
+# properties <- get_properties(database = "ArchaMap")
 # head(properties)
 ```
 
@@ -169,7 +156,7 @@ head(upload_props$usesProperties)
 
 ```r
 # Retrieve information for a specific CatMapper ID (e.g., "SM1") in SocioMap
-cmid_info <- CMIDinfo(database = "SocioMap", cmid = "SM1")
+cmid_info <- get_cmid_info(database = "SocioMap", cmid = "SM1")
 print(cmid_info)
 ```
 
@@ -177,7 +164,7 @@ print(cmid_info)
 
 ```r
 # Create a linkfile to merge datasets based on the ETHNICITY domain
-merged_data <- createLinkfile(
+merged_data <- propose_merge_links(
   categoryLabel = "ETHNICITY",
   datasetChoices = c("SD5", "SD6"),
   database = "SocioMap",
@@ -192,7 +179,7 @@ print(merged_data)
 # Join two datasets by matching keys in the SocioMap database
 joinLeft <- data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
 joinRight <- data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
-joined_data <- joinDatasets(
+joined_data <- join_datasets(
   database = "SocioMap",
   joinLeft = joinLeft,
   joinRight = joinRight,
@@ -205,7 +192,7 @@ print(joined_data)
 
 ```r
 # Search for the term "Afghanistan" in the ETHNICITY domain of SocioMap
-search_results <- searchDatabase(
+search_results <- search_database(
   database = "SocioMap",
   domain = "ETHNICITY",
   term = "Afghanistan",
@@ -219,7 +206,7 @@ print(search_results$data)
 ```r
 # Translate a dataframe containing a "country" column, matching with SocioMap's ADM0 domain
 df <- data.frame(country = "Afghanistan")
-translated_df <- translate(
+translated_df <- translate_rows(
   rows = df,
   database = "SocioMap",
   domain = "ADM0",
@@ -231,14 +218,12 @@ print(translated_df$file)
 
 ### Upload Edit-Page Data (Write API)
 
-Key format depends on upload mode:
+CatMapR upload calls always use standard key expressions. `Key` values must
+already be full expressions like `VARIABLE == VALUE` (and may include `&&`).
 
-- `so = "standard"` (recommended): `Key` values must already be full expressions like `VARIABLE == VALUE` (and may include `&&`).
-- `so = "simple"`: only supported with `ao = "add_uses"` and key values must be raw values only (for example `eth:yoruba`) with no `==`.
-
-If `so = "simple"` receives preformatted keys (contains `==`), CatMapR raises an error and requires `so = "standard"`.
-
-After upload submission, CatMapR automatically triggers contextual USES relationship refresh in the graph database based on USES properties that connect to other CMIDs. This refresh is fire-and-forget and is not polled for completion.
+`upload_rows()` automatically triggers contextual USES relationship refresh in
+the graph database after upload submission. This refresh is fire-and-forget
+and is not polled for completion.
 
 For metadata reuse, normalize stored-form keys before upload:
 
@@ -247,7 +232,20 @@ normalize_key("Key == Region == Flagstaff")
 # "Region == Flagstaff"
 ```
 
-#### Add USES ties (`ao = "add_uses"`, standard mode)
+To build upload keys from one or more columns:
+
+```r
+rows <- data.frame(
+  Type = "Adamana Brown",
+  Region = "Flagstaff",
+  stringsAsFactors = FALSE
+)
+
+build_key_from_columns(rows, c("Type", "Region"))
+# Key: "Type == Adamana Brown && Region == Flagstaff"
+```
+
+#### Add USES ties (`action = "add_uses"`)
 
 ```r
 upload_payload <- data.frame(
@@ -260,10 +258,10 @@ upload_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-result <- submitEditUpload(
+result <- upload_rows(
   df = upload_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -273,8 +271,7 @@ result <- submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "add_uses",
+  action = "add_uses",
   api_key = Sys.getenv("CATMAPR_API_KEY"),
   poll_interval_seconds = 1,
   timeout_seconds = 600
@@ -283,7 +280,7 @@ result <- submitEditUpload(
 head(result)
 ```
 
-#### Update existing USES properties (`ao = "update_add"`)
+#### Update existing USES properties (`action = "update_add"`)
 
 ```r
 update_add_payload <- data.frame(
@@ -294,10 +291,10 @@ update_add_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-submitEditUpload(
+upload_rows(
   df = update_add_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -306,14 +303,13 @@ submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "update_add",
-  optionalProperties = c("variable"),
+  action = "update_add",
+  properties = c("variable"),
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 ```
 
-#### Replace existing USES properties (`ao = "update_replace"`)
+#### Replace existing USES properties (`action = "update_replace"`)
 
 ```r
 update_replace_payload <- data.frame(
@@ -324,10 +320,10 @@ update_replace_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-submitEditUpload(
+upload_rows(
   df = update_replace_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -336,9 +332,8 @@ submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "update_replace",
-  optionalProperties = c("NewKey"),
+  action = "update_replace",
+  properties = c("NewKey"),
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 ```
@@ -350,19 +345,19 @@ key. CatMapR exposes wrappers for the main read and generate flows:
 
 ```r
 # Fetch merge-template rows for a dataset
-template_rows <- getMergingTemplate(
+template_rows <- get_merge_template(
   database = "ArchaMap",
-  datasetID = "AD947"
+  dataset_id = "AD947"
 )
 
 # Fetch the MERGING/STACK summary payload used by the node page
-template_summary <- getMergingTemplateSummary(
+template_summary <- get_merge_template_summary(
   database = "ArchaMap",
   cmid = "AMM1"
 )
 
 # Generate merge syntax files from a template data frame
-syntax_result <- createMergeSyntax(
+syntax_result <- build_merge_syntax(
   template = template_rows,
   database = "ArchaMap"
 )

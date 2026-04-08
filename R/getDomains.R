@@ -15,10 +15,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' getDomains(database = "SocioMap")
-#' getDomains(database = "ArchaMap", advanced = TRUE)
+#' get_domains(database = "SocioMap")
+#' get_domains(database = "ArchaMap", advanced = TRUE)
 #' }
-getDomains <- function(database = "SocioMap", advanced = FALSE) {
+get_domains <- function(database = "SocioMap", advanced = FALSE) {
   database <- validate_database(database)
   if (!is.logical(advanced) || length(advanced) != 1 || is.na(advanced)) {
     stop("`advanced` must be TRUE or FALSE.", call. = FALSE)

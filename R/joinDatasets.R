@@ -16,9 +16,9 @@
 #' \dontrun{
 #' joinLeft = data.frame(datasetID = "SD1", country = "Afghanistan", GID = "AFG", val0 = 1)
 #' joinRight = data.frame(datasetID = "SD2", country = "Afghanistan", geonameid = "1149361", val1 = 2)
-#' joinDatasets("SocioMap", joinLeft, joinRight, domain = "CATEGORY")
+#' join_datasets("SocioMap", joinLeft, joinRight, domain = "CATEGORY")
 #' }
-joinDatasets <- function(database, joinLeft, joinRight, domain = "CATEGORY") {
+join_datasets <- function(database, joinLeft, joinRight, domain = "CATEGORY") {
   database <- validate_database(database)
   domain <- validate_scalar_character(domain, "domain")
   if (!is.data.frame(joinLeft)) {

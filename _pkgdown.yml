@@ -15,35 +15,33 @@ navbar:
 reference:
   - title: Dataset metadata
     contents:
-      - listDatasetMetadata
-      - allDatasets
-      - getDatasetMetadata
-      - datasetInfo
+      - list_datasets
+      - get_dataset_metadata
   - title: Search and translation
     contents:
-      - CMIDinfo
-      - searchDatabase
-      - translate
+      - get_cmid_info
+      - search_database
+      - translate_rows
   - title: Merge and join
     contents:
-      - getMergingTemplate
-      - getMergingTemplateSummary
-      - createMergeSyntax
-      - createLinkfile
-      - joinDatasets
+      - get_merge_template
+      - get_merge_template_summary
+      - build_merge_syntax
+      - propose_merge_links
+      - join_datasets
   - title: Edit and upload
     contents:
-      - uploadInputNodes
-      - submitEditUpload
-      - prepare_edit_upload
+      - upload_rows
+      - prepare_upload_rows
       - build_key
+      - build_key_from_columns
       - normalize_key
       - is_normalized_key
   - title: Metadata introspection
     contents:
-      - getDomains
-      - getUploadProperties
-      - getProperties
+      - get_domains
+      - get_upload_properties
+      - get_properties
 
 articles:
   - title: Vignettes

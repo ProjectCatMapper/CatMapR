@@ -15,7 +15,7 @@
 #' @param key include Key values in results ('true' or 'false')
 #' @param query return query instead of results
 #' @param countsamename count duplicate matching names in scoring logic
-#' @param uniqueRows deduplicate identical input rows before matching
+#' @param unique_rows deduplicate identical input rows before matching
 #'
 #' @return A list with \code{file} and \code{order} from the API.
 #' @export
@@ -23,7 +23,7 @@
 #' @examples
 #' \dontrun{
 #' df = data.frame(country = "Afghanistan")
-#' translate(
+#' translate_rows(
 #'   rows = df,
 #'   database = "SocioMap",
 #'   domain = "ADM0",
@@ -36,7 +36,7 @@
 #'   query = "false"
 #' )
 #' }
-translate <- function(rows, database, term, property = "Name", domain = "CATEGORY", context = NULL, country = NULL, dataset = NULL, yearStart = NULL, yearEnd = NULL, key = "false", query = "false", countsamename = FALSE, uniqueRows = TRUE) {
+translate_rows <- function(rows, database, term, property = "Name", domain = "CATEGORY", context = NULL, country = NULL, dataset = NULL, yearStart = NULL, yearEnd = NULL, key = "false", query = "false", countsamename = FALSE, unique_rows = TRUE) {
   database <- validate_database(database)
   term <- validate_scalar_character(term, "term")
   property <- validate_scalar_character(property, "property")
@@ -60,8 +60,8 @@ translate <- function(rows, database, term, property = "Name", domain = "CATEGOR
   if (!is.logical(countsamename) || length(countsamename) != 1 || is.na(countsamename)) {
     stop("`countsamename` must be TRUE or FALSE.", call. = FALSE)
   }
-  if (!is.logical(uniqueRows) || length(uniqueRows) != 1 || is.na(uniqueRows)) {
-    stop("`uniqueRows` must be TRUE or FALSE.", call. = FALSE)
+  if (!is.logical(unique_rows) || length(unique_rows) != 1 || is.na(unique_rows)) {
+    stop("`unique_rows` must be TRUE or FALSE.", call. = FALSE)
   }
 
   results = callAPI(endpoint = "translate", parameters = list(
@@ -78,7 +78,7 @@ translate <- function(rows, database, term, property = "Name", domain = "CATEGOR
          key = key,
          query = query,
          countsamename = countsamename,
-         uniqueRows = uniqueRows
+         uniqueRows = unique_rows
   ), request = "POST")
 
   return(results)

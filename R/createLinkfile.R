@@ -26,10 +26,10 @@
 #' \dontrun{
 #' categoryLabel <- c("ETHNICITY")
 #' datasetChoices <- c("SD5", "SD6")
-#' merged_data <- createLinkfile(categoryLabel, datasetChoices, equivalence = "standard")
+#' merged_data <- propose_merge_links(categoryLabel, datasetChoices, equivalence = "standard")
 #' }
 #'
-createLinkfile <- function(categoryLabel,
+propose_merge_links <- function(categoryLabel,
                            datasetChoices,
                            database = "SocioMap",
                            intersection = FALSE,

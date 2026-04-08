@@ -16,17 +16,17 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 CatMapR upload flows are usually asynchronous and can mutate production
 metadata. This vignette focuses on safe defaults and repeatable patterns.
 
-## Upload mode matrix
+## Key requirements
 
-- `so = "standard"` (recommended): provide fully formed `Key` expressions such as `Type == Adamana Brown`.
-- `so = "simple"`: only valid with `ao = "add_uses"` and raw key values without `==`.
+- Upload calls use standard key expressions.
+- Provide fully formed `Key` values such as `Type == Adamana Brown`.
 
-## Full `ao` to Edit GUI mapping
+## Full `action` to Edit GUI mapping
 
-This crosswalk maps CatMapR `ao` values to the exact labels shown in the
+This crosswalk maps CatMapR `action` values to the exact labels shown in the
 CatMapper Edit page (**Advanced** upload options).
 
-| CatMapR `ao` value | Edit page GUI value | Typical purpose |
+| CatMapR `action` value | Edit page GUI value | Typical purpose |
 | --- | --- | --- |
 | `add_node` | `Adding new node for every row` | Create new category or dataset nodes from upload rows. |
 | `add_uses` | `Adding new uses ties (with old or new nodes)` | Create dataset-to-category `USES` ties. |
@@ -35,13 +35,16 @@ CatMapper Edit page (**Advanced** upload options).
 
 Notes:
 
-- `so = "simple"` is supported only when `ao = "add_uses"`.
-- For `so = "standard"`, required columns vary by `ao` and are validated before upload.
+- Required columns vary by `action` and are validated before upload.
 
 ## Key helper patterns
 
 ```{r key-helpers, eval=FALSE}
 build_key("Type", "Adamana Brown")
+build_key_from_columns(
+  data.frame(Type = "Adamana Brown", Region = "Flagstaff", stringsAsFactors = FALSE),
+  c("Type", "Region")
+)
 normalize_key("Key == Region == Flagstaff")
 is_normalized_key("Region == Flagstaff")
 ```
@@ -59,10 +62,10 @@ payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-result <- submitEditUpload(
+result <- upload_rows(
   df = payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -71,8 +74,7 @@ result <- submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "add_uses",
+  action = "add_uses",
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 
@@ -90,10 +92,10 @@ update_add_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-submitEditUpload(
+upload_rows(
   df = update_add_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -102,9 +104,8 @@ submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "update_add",
-  optionalProperties = c("variable"),
+  action = "update_add",
+  properties = c("variable"),
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 ```
@@ -120,10 +121,10 @@ update_replace_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-submitEditUpload(
+upload_rows(
   df = update_replace_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -132,9 +133,8 @@ submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "update_replace",
-  optionalProperties = c("NewKey"),
+  action = "update_replace",
+  properties = c("NewKey"),
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 ```

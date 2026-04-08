@@ -19,9 +19,9 @@
 #'
 #' @examples
 #' \dontrun{
-#' searchDatabase(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
+#' search_database(database = "SocioMap", domain = "ETHNICITY", term = "Dan", property = "Name")
 #' }
-searchDatabase <- function(database,
+search_database <- function(database,
                   domain = NULL,
                   term = NULL,
                   property = "Name",

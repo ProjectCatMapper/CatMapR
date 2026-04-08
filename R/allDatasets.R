@@ -14,10 +14,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' allDatasets(database = "SocioMap")
-#' allDatasets(database = "ArchaMap")
+#' list_datasets(database = "SocioMap")
+#' list_datasets(database = "ArchaMap")
 #' }
-allDatasets <- function(database) {
+list_datasets <- function(database) {
   database <- validate_database(database)
 
   # Define the endpoint and parameters

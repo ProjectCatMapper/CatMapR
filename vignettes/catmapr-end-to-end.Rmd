@@ -49,7 +49,7 @@ in different and incompatible ways. CatMapper helps by:
 - reducing manual harmonization effort before analysis,
 - making joins across independently structured datasets more reproducible.
 
-CatMapR provides these capabilities in scriptable R workflows, so translation,
+CatMapR provides these capabilities in scriptable R workflows, including translation,
 quality checks, and joins can be rerun consistently as data updates.
 
 ## What CatMapR Returns
@@ -70,23 +70,23 @@ User-owned/raw datasets are external inputs to your R workflow.
 
 | CatMapperJS route | Typical UI step | CatMapR function(s) |
 | --- | --- | --- |
-| `/:database/explore` | Search categories/entities and inspect details | `searchDatabase()`, `CMIDinfo()`, `getDomains()` |
-| `/:database/translate` | Upload labels, run matching, review translated outputs | `translate()` |
-| `/:database/merge` | Propose merge keys and join aligned datasets | `createLinkfile()`, `joinDatasets()` |
-| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `getUploadProperties()`, `uploadInputNodes()`, `submitEditUpload()` |
+| `/:database/explore` | Search categories/entities and inspect details | `search_database()`, `get_cmid_info()`, `get_domains()` |
+| `/:database/translate` | Upload labels, run matching, review translated outputs | `translate_rows()` |
+| `/:database/merge` | Propose merge keys and join aligned datasets | `propose_merge_links()`, `join_datasets()` |
+| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `get_upload_properties()`, `upload_rows()` |
 
 ## UI Workflow Crosswalk (Detailed)
 
 | User intent | CatMapper UI path | UI action | CatMapR call pattern |
 | --- | --- | --- | --- |
-| Browse available dataset records | `/:database` and `/:database/explore` | Open database and review dataset catalog entries | `listDatasetMetadata(database)` (legacy: `allDatasets(database)`) |
-| Inspect one known dataset CMID | `/:database/:cmid` | Open dataset info page | `getDatasetMetadata(database, CMID, domain, children)` (legacy: `datasetInfo(...)`) |
-| Browse metadata helpers | `/:database/explore` and `/:database/edit` | Inspect available domains and property fields | `getDomains(database)`, `getUploadProperties(database)` |
-| Find entities/categories | `/:database/explore` | Run search filters and inspect hits | `searchDatabase(...)`, then `CMIDinfo(...)` |
-| Harmonize labels | `/:database/translate` | Upload table and run translation | `translate(rows, database, term, ...)` |
-| Build merge candidates | `/:database/merge` | Propose merge linkfile | `createLinkfile(categoryLabel, datasetChoices, ...)` |
-| Join aligned sources | `/:database/merge` | Run join on matched keys | `joinDatasets(database, joinLeft, joinRight, ...)` |
-| Submit metadata/category edits | `/:database/edit` | Upload edit rows and auto-trigger contextual USES refresh | `submitEditUpload(...)` (preferred) or `uploadInputNodes(...)` |
+| Browse available dataset records | `/:database` and `/:database/explore` | Open database and review dataset catalog entries | `list_datasets(database)` |
+| Inspect one known dataset CMID | `/:database/:cmid` | Open dataset info page | `get_dataset_metadata(database, cmid, domain, children)` |
+| Browse metadata helpers | `/:database/explore` and `/:database/edit` | Inspect available domains and property fields | `get_domains(database)`, `get_upload_properties(database)` |
+| Find entities/categories | `/:database/explore` | Run search filters and inspect hits | `search_database(...)`, then `get_cmid_info(...)` |
+| Harmonize labels | `/:database/translate` | Upload table and run translation | `translate_rows(rows, database, term, ...)` |
+| Build merge candidates | `/:database/merge` | Propose merge linkfile | `propose_merge_links(categoryLabel, datasetChoices, ...)` |
+| Join aligned sources | `/:database/merge` | Run join on matched keys | `join_datasets(database, joinLeft, joinRight, ...)` |
+| Submit metadata/category edits | `/:database/edit` | Upload edit rows and auto-trigger contextual USES refresh | `upload_rows(...)` |
 
 ## Setup
 
@@ -114,7 +114,7 @@ Dataset IDs above were confirmed on 2026-03-18 and may change as catalogs update
 
 ```{r list-datasets}
 if (run_live) {
-  datasets <- listDatasetMetadata(database = "SocioMap")
+  datasets <- list_datasets(database = "SocioMap")
 } else {
   datasets <- data.frame(
     CMID = c("SD1", "SD2", "SD2176", "SD461930"),
@@ -131,8 +131,8 @@ head(datasets)
 
 ```{r metadata-helpers}
 if (run_live) {
-  domains <- getDomains(database = "SocioMap")
-  upload_props <- getUploadProperties(database = "SocioMap")
+  domains <- get_domains(database = "SocioMap")
+  upload_props <- get_upload_properties(database = "SocioMap")
 } else {
   domains <- data.frame(
     domain = c("DISTRICT", "DISTRICT", "ETHNICITY"),
@@ -152,20 +152,20 @@ head(upload_props$nodeProperties)
 head(upload_props$usesProperties)
 ```
 
-`getProperties()` is also available for deployments that expose
+`get_properties()` is also available for deployments that expose
 `/metadata/properties/<database>`, but rollout timing may vary by API deployment.
 
 ## 3) Search and Inspect a Category
 
 ```{r search-inspect}
 if (run_live) {
-  hits <- searchDatabase(
+  hits <- search_database(
     database = "SocioMap",
     domain = "ADM0",
     term = "Ghana",
     property = "Name"
   )
-  details <- CMIDinfo(database = "SocioMap", cmid = "SM1")
+  details <- get_cmid_info(database = "SocioMap", cmid = "SM1")
 } else {
   hits <- list(
     count = 1,
@@ -200,7 +200,7 @@ raw_df
 
 ```{r translate}
 if (run_live) {
-  translated <- translate(
+  translated <- translate_rows(
     rows = raw_df,
     database = "SocioMap",
     domain = "ADM0",
@@ -259,7 +259,7 @@ if (run_live) {
     stringsAsFactors = FALSE
   )
 
-  joined <- joinDatasets(
+  joined <- join_datasets(
     database = "SocioMap",
     joinLeft = left_df,
     joinRight = right_df,
@@ -284,15 +284,13 @@ account and are shown as a template only. The server identifies the acting
 user from the API key and enforces permissions for write endpoints.
 CatMapR does not manage username/password login flows.
 
-Key format depends on upload mode:
+Upload calls always use standard key expressions.
+Provide full key expressions in the selected key column
+(for example `VARIABLE == VALUE`).
 
-- `so = "standard"` (recommended) expects full key expressions in the selected key column (for example `VARIABLE == VALUE`).
-- `so = "simple"` is only supported with `ao = "add_uses"` and expects raw values only (for example `eth:yoruba`) without `==`.
-
-If preformatted key expressions are provided in `so = "simple"`, CatMapR
-raises an error and requires `so = "standard"`.
-
-After upload submission, CatMapR automatically triggers contextual USES relationship refresh in the graph database based on USES properties that connect to other CMIDs. This trigger is fire-and-forget and is not polled for completion.
+`upload_rows()` triggers contextual USES relationship refresh in the graph
+database based on USES properties that connect to other CMIDs. This trigger is
+fire-and-forget and is not polled for completion.
 
 ```{r write-flow, eval = FALSE}
 upload_payload <- data.frame(
@@ -305,10 +303,10 @@ upload_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-result <- submitEditUpload(
+result <- upload_rows(
   df = upload_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -318,8 +316,7 @@ result <- submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "add_uses",
+  action = "add_uses",
   api_key = Sys.getenv("CATMAPR_API_KEY"),
   poll_interval_seconds = 1,
   timeout_seconds = 600
@@ -337,10 +334,10 @@ update_add_payload <- data.frame(
   stringsAsFactors = FALSE
 )
 
-submitEditUpload(
+upload_rows(
   df = update_add_payload,
   database = "SocioMap",
-  formData = list(
+  form_data = list(
     domain = "ETHNICITY",
     subdomain = "ETHNICITY",
     datasetID = "SD1",
@@ -349,9 +346,8 @@ submitEditUpload(
     cmidColumn = "CMID",
     keyColumn = "Key"
   ),
-  so = "standard",
-  ao = "update_add",
-  optionalProperties = c("variable"),
+  action = "update_add",
+  properties = c("variable"),
   api_key = Sys.getenv("CATMAPR_API_KEY")
 )
 ```

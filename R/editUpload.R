@@ -1,53 +1,34 @@
-#' Upload Edit-Page Rows to CatMapper
+#' Upload Edit Rows to CatMapper
 #'
-#' Mirrors the CatMapperJS edit-page upload call to \code{/uploadInputNodes}.
-#' This wrapper is intended for write operations and requires a valid API key
-#' tied to a registered CatMapper account.
-#' Server-side permissions determine whether the authenticated user can perform
-#' the requested write action.
+#' Upload rows to CatMapper's `uploadInputNodes` endpoint using authenticated
+#' write requests.
 #'
 #' @param df Data frame or list of row objects to upload.
-#' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
-#' @param formData Named list matching the edit-page \code{formData} payload.
-#' @param so Upload mode, usually \code{"standard"} or \code{"simple"}.
-#'   Use \code{"standard"} when the upload key values are already full key
-#'   expressions (for example \code{VARIABLE == VALUE}). Use \code{"simple"}
-#'   when key values are raw terms only (for example \code{eth:yoruba}) without
-#'   the \code{==} expression.
-#' @param ao Advanced upload option. Supported values map directly to CatMapper
-#'   Edit-page Advanced options:
-#'   \itemize{
-#'   \item \code{"add_node"} = "Adding new node for every row"
-#'   \item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
-#'   \item \code{"update_add"} = "Updating existing USES only--add or add to properties"
-#'   \item \code{"update_replace"} = "Updating existing USES only--replace one property"
-#'   }
-#' @param addoptions Named list with \code{district} and \code{recordyear} booleans.
-#' @param allContext Optional vector/list of contextual columns.
-#' @param optionalProperties Optional vector/list alias for \code{allContext}.
-#'   When provided, this value is used as the upload property list.
-#' @param mergingType Optional merging mode used by merge upload workflows.
-#' @param api_key API key used for authenticated write actions. If \code{NULL},
-#'   \code{CATMAPR_API_KEY} is used.
+#' @param database Target database, typically `"SocioMap"` or `"ArchaMap"`.
+#' @param form_data Named list matching CatMapper edit-page `formData`.
+#' @param action Upload action option. Supported values:
+#'   - `"add_node"`
+#'   - `"add_uses"`
+#'   - `"update_add"`
+#'   - `"update_replace"`
+#' @param add_options Named list with `district` and `recordyear` booleans.
+#' @param properties Optional vector/list of upload property names to include.
+#' @param merging_type Optional merging mode used by merge upload workflows.
+#' @param api_key API key used for authenticated write actions. If `NULL`,
+#'   `CATMAPR_API_KEY` is used.
 #' @param poll_interval_seconds Polling interval in seconds while waiting for
 #'   queued upload tasks.
 #' @param timeout_seconds Maximum seconds to wait for upload completion.
-#' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
+#' @param url API URL override. If `NULL`, `CATMAPR_API_URL` is used when set.
 #'
 #' @return A data frame built from the upload task result rows returned by the
-#'   API.
-#' @details CatMapR does not manage username/password login flows. It sends
-#'   API-key-authenticated requests and the CatMapper API identifies the acting
-#'   user on the server side. For \code{so = "simple"}, only
-#'   \code{ao = "add_uses"} is supported and key values in the selected key
-#'   column must be raw values without \code{==}. For the full \code{ao}
-#'   crosswalk and examples, see
-#'   \code{vignette("safe-upload-patterns", package = "CatMapR")}.
+#'   API. The function always triggers a background `updateWaitingUSES` refresh
+#'   after upload completion; refresh trigger errors are suppressed.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' upload_result <- uploadInputNodes(
+#' result <- upload_rows(
 #'   df = data.frame(
 #'     CMName = "Yoruba",
 #'     Name = "Yoruba",
@@ -58,7 +39,7 @@
 #'     stringsAsFactors = FALSE
 #'   ),
 #'   database = "SocioMap",
-#'   formData = list(
+#'   form_data = list(
 #'     domain = "ETHNICITY",
 #'     subdomain = "ETHNICITY",
 #'     datasetID = "SD1",
@@ -68,36 +49,31 @@
 #'     cmidColumn = "CMID",
 #'     keyColumn = "Key"
 #'   ),
-#'   so = "standard",
-#'   ao = "add_uses",
-#'   poll_interval_seconds = 1,
-#'   timeout_seconds = 600,
+#'   action = "add_uses",
+#'   properties = c("variable"),
 #'   api_key = Sys.getenv("CATMAPR_API_KEY")
 #' )
-#' head(upload_result)
+#' head(result)
 #' }
-uploadInputNodes <- function(df,
-                             database,
-                             formData = list(),
-                             so = "standard",
-                             ao = "add_node",
-                             addoptions = list(district = FALSE, recordyear = FALSE),
-                             allContext = list(),
-                             optionalProperties = NULL,
-                             mergingType = "0",
-                             api_key = NULL,
-                             poll_interval_seconds = 1,
-                             timeout_seconds = 600,
-                             url = NULL) {
+upload_rows <- function(df,
+                        database,
+                        form_data = list(),
+                        action = "add_node",
+                        add_options = list(district = FALSE, recordyear = FALSE),
+                        properties = NULL,
+                        merging_type = "0",
+                        api_key = NULL,
+                        poll_interval_seconds = 1,
+                        timeout_seconds = 600,
+                        url = NULL) {
   key <- resolve_api_key(api_key)
-  prepared <- prepare_edit_upload(
+  prepared <- prepare_upload_rows(
     df = df,
-    formData = formData,
-    so = so,
-    ao = ao,
-    allContext = allContext,
-    optionalProperties = optionalProperties,
-    mergingType = mergingType
+    form_data = form_data,
+    action = action,
+    properties = properties,
+    merging_type = merging_type,
+    database = database
   )
   poll_interval_seconds <- validate_positive_number(
     poll_interval_seconds,
@@ -109,14 +85,14 @@ uploadInputNodes <- function(df,
   )
 
   payload <- list(
-    formData = prepared$formData,
+    formData = prepared$form_data,
     database = prepared$database,
     df = prepared$rows,
-    so = prepared$so,
-    ao = prepared$ao,
-    addoptions = normalize_addoptions(addoptions),
-    allContext = prepared$allContext,
-    mergingType = prepared$mergingType
+    so = "standard",
+    ao = prepared$action,
+    addoptions = normalize_add_options(add_options),
+    optionalProperties = prepared$properties,
+    mergingType = prepared$merging_type
   )
 
   headers <- build_api_key_headers(api_key = key)
@@ -127,6 +103,9 @@ uploadInputNodes <- function(df,
     poll_interval_seconds = poll_interval_seconds,
     timeout_seconds = timeout_seconds
   )
+
+  # Fire-and-forget trigger; intentionally silent on errors.
+  maybe_trigger_waiting_uses_refresh(database = prepared$database, url = url)
 
   df_out <- upload_result$data
   attr(df_out, "upload_task") <- upload_result$status
@@ -134,219 +113,63 @@ uploadInputNodes <- function(df,
 }
 
 # Trigger waiting-USES contextual relationship refresh in fire-and-forget mode.
-# This is intentionally internal and used by submitEditUpload().
-# The endpoint does not require API-key headers.
+# This is intentionally internal and used by upload_rows().
 # @noRd
-updateWaitingUSES <- function(database,
-                              url = NULL) {
+trigger_waiting_uses_refresh <- function(database, url = NULL) {
   database <- validate_database(database)
-  payload <- list(database = database)
   callAPI(
     endpoint = "updateWaitingUSES",
-    parameters = payload,
+    parameters = list(database = database),
     request = "POST",
     url = url
   )
 }
 
-#' Submit Edit Upload and Refresh Queue
-#'
-#' Convenience wrapper that executes the CatMapperJS edit-page flow. It uploads
-#' rows via \code{/uploadInputNodes} and then triggers waiting-USES contextual
-#' relationship refresh in fire-and-forget mode.
-#' This write flow requires a valid API key for upload calls, and permissions
-#' are enforced by the server.
-#'
-#' @inheritParams uploadInputNodes
-#' @param refresh_waiting_uses If \code{TRUE}, ensure waiting-USES refresh is
-#'   triggered after upload without polling for completion.
-#'
-#' @return A data frame built from the upload task result rows returned by the
-#'   API.
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' result <- submitEditUpload(
-#'   df = data.frame(
-#'     CMName = "Yoruba",
-#'     Name = "Yoruba",
-#'     CMID = "",
-#'     Key = "Type == Adamana Brown",
-#'     datasetID = "SD1",
-#'     label = "ETHNICITY",
-#'     stringsAsFactors = FALSE
-#'   ),
-#'   database = "SocioMap",
-#'   formData = list(
-#'     domain = "ETHNICITY",
-#'     subdomain = "ETHNICITY",
-#'     datasetID = "SD1",
-#'     cmNameColumn = "CMName",
-#'     categoryNamesColumn = "Name",
-#'     cmidColumn = "CMID",
-#'     keyColumn = "Key"
-#'   ),
-#'   so = "standard",
-#'   ao = "add_uses",
-#'   poll_interval_seconds = 1,
-#'   timeout_seconds = 600,
-#'   api_key = Sys.getenv("CATMAPR_API_KEY")
-#' )
-#' head(result)
-#' }
-submitEditUpload <- function(df,
-                             database,
-                             formData = list(),
-                             so = "standard",
-                             ao = "add_node",
-                             addoptions = list(district = FALSE, recordyear = FALSE),
-                             allContext = list(),
-                             optionalProperties = NULL,
-                             mergingType = "0",
-                             api_key = NULL,
-                             refresh_waiting_uses = TRUE,
-                             poll_interval_seconds = 1,
-                             timeout_seconds = 600,
-                             url = NULL) {
-  key <- resolve_api_key(api_key)
-  refresh_waiting_uses <- validate_scalar_logical(
-    refresh_waiting_uses,
-    "refresh_waiting_uses"
+maybe_trigger_waiting_uses_refresh <- function(database, url = NULL) {
+  tryCatch(
+    trigger_waiting_uses_refresh(database = database, url = url),
+    error = function(e) invisible(NULL)
   )
-  prepared <- prepare_edit_upload(
-    df = df,
-    formData = formData,
-    so = so,
-    ao = ao,
-    allContext = allContext,
-    optionalProperties = optionalProperties,
-    mergingType = mergingType,
-    database = database,
-    fail_on_simple_mismatch = TRUE
-  )
-  poll_interval_seconds <- validate_positive_number(
-    poll_interval_seconds,
-    "poll_interval_seconds"
-  )
-  timeout_seconds <- validate_positive_number(
-    timeout_seconds,
-    "timeout_seconds"
-  )
-  headers <- build_api_key_headers(api_key = key)
-  payload <- list(
-    formData = prepared$formData,
-    database = prepared$database,
-    df = prepared$rows,
-    so = prepared$so,
-    ao = prepared$ao,
-    addoptions = normalize_addoptions(addoptions),
-    allContext = prepared$allContext,
-    mergingType = prepared$mergingType
-  )
-  upload_result <- run_upload_and_wait(
-    payload = payload,
-    headers = headers,
-    url = url,
-    poll_interval_seconds = poll_interval_seconds,
-    timeout_seconds = timeout_seconds
-  )
-  upload_status <- upload_result$status
-
-  if (isTRUE(refresh_waiting_uses)) {
-    waiting_task_id <- upload_status$waitingUsesTask
-    waiting_task_exists <- !is.null(waiting_task_id) && nzchar(as.character(waiting_task_id))
-    if (!waiting_task_exists) {
-      tryCatch(
-        updateWaitingUSES(
-          database = prepared$database,
-          url = url
-        ),
-        error = function(e) {
-          warning(
-            sprintf(
-              "Failed to trigger waiting-USES refresh for `%s`: %s",
-              prepared$database,
-              conditionMessage(e)
-            ),
-            call. = FALSE
-          )
-          invisible(NULL)
-        }
-      )
-    }
-  }
-
-  df_out <- upload_result$data
-  attr(df_out, "upload_task") <- upload_status
-  df_out
 }
 
-#' Prepare Edit Upload Payload Components
+#' Prepare Upload Payload Components
 #'
-#' Validates upload mode, operation, formData mappings, and key safety before
+#' Validate upload action, form-data mappings, and required columns before
 #' sending write requests.
 #'
 #' @param df Data frame or list of row objects to upload.
-#' @param formData Named list matching the edit-page \code{formData} payload.
-#' @param so Upload mode, usually \code{"standard"} or \code{"simple"}.
-#' @param ao Advanced upload option. Supported values map directly to CatMapper
-#'   Edit-page Advanced options:
-#'   \itemize{
-#'   \item \code{"add_node"} = "Adding new node for every row"
-#'   \item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
-#'   \item \code{"update_add"} = "Updating existing USES only--add or add to properties"
-#'   \item \code{"update_replace"} = "Updating existing USES only--replace one property"
-#'   }
-#' @param allContext Optional vector/list of contextual columns.
-#' @param optionalProperties Optional vector/list alias for \code{allContext}.
-#' @param mergingType Optional merging mode used by merge upload workflows.
-#' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
-#' @param fail_on_simple_mismatch Internal guard; when \code{TRUE}, simple-mode
-#'   restrictions are strictly enforced.
+#' @param form_data Named list matching CatMapper edit-page `formData`.
+#' @param action Upload action option.
+#' @param properties Optional vector/list of upload property names to include.
+#' @param merging_type Optional merging mode used by merge upload workflows.
+#' @param database Target database, typically `"SocioMap"` or `"ArchaMap"`.
 #'
 #' @return A named list with validated upload components.
 #' @export
-prepare_edit_upload <- function(df,
-                                formData = list(),
-                                so = "standard",
-                                ao = "add_node",
-                                allContext = list(),
-                                optionalProperties = NULL,
-                                mergingType = "0",
-                                database = "SocioMap",
-                                fail_on_simple_mismatch = TRUE) {
+prepare_upload_rows <- function(df,
+                                form_data = list(),
+                                action = "add_node",
+                                properties = NULL,
+                                merging_type = "0",
+                                database = "SocioMap") {
   database <- validate_database(database)
-  so <- validate_scalar_character(so, "so")
-  ao <- validate_scalar_character(ao, "ao")
-  mergingType <- validate_scalar_character(mergingType, "mergingType")
-  fail_on_simple_mismatch <- validate_scalar_logical(
-    fail_on_simple_mismatch,
-    "fail_on_simple_mismatch"
-  )
-  if (!is.list(formData)) {
-    stop("`formData` must be a list.", call. = FALSE)
+  action <- validate_scalar_character(action, "action")
+  merging_type <- validate_scalar_character(merging_type, "merging_type")
+  if (!is.list(form_data)) {
+    stop("`form_data` must be a list.", call. = FALSE)
   }
 
-  normalized_context <- resolve_optional_properties(
-    allContext = allContext,
-    optionalProperties = optionalProperties
-  )
+  normalized_properties <- normalize_upload_properties(properties)
   rows <- coerce_upload_rows(df)
-  validate_form_data(formData = formData, rows = rows, so = so, ao = ao)
-  validate_required_columns_by_ao(rows = rows, so = so, ao = ao, formData = formData)
-  if (isTRUE(fail_on_simple_mismatch)) {
-    validate_simple_mode_selection(so = so, ao = ao)
-    validate_simple_upload_key_values(rows = rows, so = so, formData = formData)
-  }
+  validate_form_data(form_data = form_data, rows = rows)
+  validate_required_columns_by_action(rows = rows, action = action, form_data = form_data)
 
   list(
     database = database,
-    formData = formData,
-    so = so,
-    ao = ao,
-    allContext = normalized_context,
-    mergingType = mergingType,
+    form_data = form_data,
+    action = action,
+    properties = normalized_properties,
+    merging_type = merging_type,
     rows = rows
   )
 }
@@ -473,14 +296,11 @@ normalize_table <- function(x) {
   as.data.frame(x, stringsAsFactors = FALSE, check.names = FALSE)
 }
 
-resolve_optional_properties <- function(allContext, optionalProperties) {
-  if (is.null(optionalProperties)) {
-    return(validate_character_collection(allContext, "allContext"))
-  }
-  validate_character_collection(optionalProperties, "optionalProperties")
+normalize_upload_properties <- function(properties) {
+  validate_character_collection(properties, "properties")
 }
 
-validate_form_data <- function(formData, rows, so, ao) {
+validate_form_data <- function(form_data, rows) {
   required_form_fields <- c(
     "datasetID",
     "cmNameColumn",
@@ -488,20 +308,20 @@ validate_form_data <- function(formData, rows, so, ao) {
     "cmidColumn",
     "keyColumn"
   )
-  missing <- required_form_fields[!required_form_fields %in% names(formData)]
+  missing <- required_form_fields[!required_form_fields %in% names(form_data)]
   if (length(missing) > 0) {
     stop(
-      sprintf("`formData` is missing required field(s): %s.", paste(missing, collapse = ", ")),
+      sprintf("`form_data` is missing required field(s): %s.", paste(missing, collapse = ", ")),
       call. = FALSE
     )
   }
 
   mapped <- unique(c(
-    formData$cmNameColumn,
-    formData$categoryNamesColumn,
-    formData$cmidColumn,
-    formData$keyColumn,
-    as.list(formData$alternateCategoryNamesColumns)
+    form_data$cmNameColumn,
+    form_data$categoryNamesColumn,
+    form_data$cmidColumn,
+    form_data$keyColumn,
+    as.list(form_data$alternateCategoryNamesColumns)
   ))
   mapped <- mapped[vapply(mapped, function(x) is.character(x) && length(x) == 1 && nzchar(x), logical(1))]
   if (length(rows) == 0 || length(mapped) == 0) {
@@ -509,10 +329,10 @@ validate_form_data <- function(formData, rows, so, ao) {
   }
   row_cols <- names(rows[[1]])
   missing_cols <- mapped[!mapped %in% row_cols]
-  if (length(missing_cols) > 0 && tolower(so) == "standard") {
+  if (length(missing_cols) > 0) {
     stop(
       sprintf(
-        "Mapped formData column(s) not found in upload rows for `so = \"standard\"`: %s.",
+        "Mapped form-data column(s) not found in upload rows: %s.",
         paste(unique(missing_cols), collapse = ", ")
       ),
       call. = FALSE
@@ -521,19 +341,19 @@ validate_form_data <- function(formData, rows, so, ao) {
   invisible(NULL)
 }
 
-validate_required_columns_by_ao <- function(rows, so, ao, formData) {
-  if (length(rows) == 0 || tolower(so) != "standard") {
+validate_required_columns_by_action <- function(rows, action, form_data) {
+  if (length(rows) == 0) {
     return(invisible(NULL))
   }
   row_cols <- names(rows[[1]])
-  key_col <- resolve_upload_key_column(formData)
-  cmid_col <- formData$cmidColumn
+  key_col <- resolve_upload_key_column(form_data)
+  cmid_col <- form_data$cmidColumn
   required <- switch(
-    ao,
+    action,
     add_uses = c(cmid_col, key_col, "datasetID"),
     update_add = c(cmid_col, key_col, "datasetID"),
     update_replace = c(cmid_col, key_col, "datasetID"),
-    add_node = c(formData$cmNameColumn, formData$categoryNamesColumn, key_col, "datasetID", "label"),
+    add_node = c(form_data$cmNameColumn, form_data$categoryNamesColumn, key_col, "datasetID", "label"),
     character(0)
   )
   required <- unique(required[nzchar(required)])
@@ -541,20 +361,10 @@ validate_required_columns_by_ao <- function(rows, so, ao, formData) {
   if (length(missing) > 0) {
     stop(
       sprintf(
-        "Required upload column(s) missing for `ao = \"%s\"` in `so = \"standard\"`: %s.",
-        ao,
+        "Required upload column(s) missing for `action = \"%s\"`: %s.",
+        action,
         paste(missing, collapse = ", ")
       ),
-      call. = FALSE
-    )
-  }
-  invisible(NULL)
-}
-
-validate_simple_mode_selection <- function(so, ao) {
-  if (tolower(so) == "simple" && ao != "add_uses") {
-    stop(
-      "`so = \"simple\"` is only supported when `ao = \"add_uses\"`. Use `so = \"standard\"` for other upload actions.",
       call. = FALSE
     )
   }
@@ -602,74 +412,31 @@ coerce_upload_rows <- function(df) {
   stop("`df` must be a data frame or a list of row objects.")
 }
 
-normalize_addoptions <- function(addoptions) {
-  if (is.null(addoptions)) {
-    addoptions <- list()
+normalize_add_options <- function(add_options) {
+  if (is.null(add_options)) {
+    add_options <- list()
   }
-  if (!is.list(addoptions)) {
-    stop("`addoptions` must be a list.")
+  if (!is.list(add_options)) {
+    stop("`add_options` must be a list.")
   }
 
   list(
-    district = isTRUE(addoptions$district),
-    recordyear = isTRUE(addoptions$recordyear)
+    district = isTRUE(add_options$district),
+    recordyear = isTRUE(add_options$recordyear)
   )
 }
 
-resolve_upload_key_column <- function(formData) {
-  if (!is.list(formData)) {
+resolve_upload_key_column <- function(form_data) {
+  if (!is.list(form_data)) {
     return("Key")
   }
 
-  key_column <- formData$keyColumn
+  key_column <- form_data$keyColumn
   if (!is.character(key_column) || length(key_column) != 1 || is.na(key_column) || !nzchar(key_column)) {
     return("Key")
   }
 
   key_column
-}
-
-validate_simple_upload_key_values <- function(rows, so, formData) {
-  if (tolower(so) != "simple" || !is.list(rows) || length(rows) == 0) {
-    return(invisible(NULL))
-  }
-
-  key_column <- resolve_upload_key_column(formData)
-  offending_rows <- integer(0)
-
-  for (i in seq_along(rows)) {
-    row <- rows[[i]]
-    if (!is.list(row) || is.null(names(row)) || !key_column %in% names(row)) {
-      next
-    }
-
-    raw_value <- row[[key_column]]
-    if (is.null(raw_value) || length(raw_value) != 1 || is.na(raw_value)) {
-      next
-    }
-
-    key_text <- trimws(as.character(raw_value))
-    if (!grepl("==", key_text, fixed = TRUE)) {
-      next
-    }
-    offending_rows <- c(offending_rows, i)
-  }
-
-  if (length(offending_rows) > 0) {
-    stop(
-      sprintf(
-        paste0(
-          "`so = \"simple\"` expects raw key values in `%s` without `==`. ",
-          "Rows %s include preformatted key expressions; use `so = \"standard\"`."
-        ),
-        key_column,
-        paste(offending_rows, collapse = ", ")
-      ),
-      call. = FALSE
-    )
-  }
-
-  invisible(NULL)
 }
 
 validate_positive_number <- function(x, arg) {

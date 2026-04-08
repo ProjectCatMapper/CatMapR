@@ -11,10 +11,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' CMIDinfo(database = "SocioMap", cmid = "SM1")
-#' CMIDinfo(database = "ArchaMap", cmid = "AM1")
+#' get_cmid_info(database = "SocioMap", cmid = "SM1")
+#' get_cmid_info(database = "ArchaMap", cmid = "AM1")
 #' }
-CMIDinfo <- function(database, cmid) {
+get_cmid_info <- function(database, cmid) {
   database <- validate_database(database)
   cmid <- validate_scalar_character(cmid, "cmid")
 

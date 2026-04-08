@@ -31,6 +31,93 @@ build_key <- function(field, value) {
   paste(trimws(field), "==", trimws(value))
 }
 
+#' Build Row-Wise Composite Key Column From Source Columns
+#'
+#' Build a CatMapper-compatible key column from one or more source columns
+#' using the `FIELD == VALUE` expression format, joined by `&&` per row.
+#'
+#' @param data Data frame containing source key columns.
+#' @param columns Character vector of source column names to include in the key.
+#' @param key_column Name of the output key column. Defaults to `Key`.
+#' @param drop_source If `TRUE`, remove source key columns after creating the
+#'   output key column.
+#'
+#' @return A data frame with the generated key column.
+#' @export
+#'
+#' @examples
+#' rows <- data.frame(Type = "Adamana Brown", Region = "Flagstaff", stringsAsFactors = FALSE)
+#' build_key_from_columns(rows, c("Type", "Region"))
+build_key_from_columns <- function(data,
+                                   columns,
+                                   key_column = "Key",
+                                   drop_source = FALSE) {
+  if (!is.data.frame(data)) {
+    stop("`data` must be a data frame.", call. = FALSE)
+  }
+  if (!is.character(columns) || length(columns) == 0) {
+    stop("`columns` must be a non-empty character vector.", call. = FALSE)
+  }
+  columns <- unique(trimws(columns))
+  columns <- columns[nzchar(columns)]
+  if (length(columns) == 0) {
+    stop("`columns` must include at least one non-empty column name.", call. = FALSE)
+  }
+
+  if (!is.character(key_column) || length(key_column) != 1 || is.na(key_column) || !nzchar(key_column)) {
+    stop("`key_column` must be a non-empty character scalar.", call. = FALSE)
+  }
+  if (!is.logical(drop_source) || length(drop_source) != 1 || is.na(drop_source)) {
+    stop("`drop_source` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  missing_cols <- columns[!columns %in% names(data)]
+  if (length(missing_cols) > 0) {
+    stop(
+      sprintf("Source key column(s) not found in `data`: %s.", paste(missing_cols, collapse = ", ")),
+      call. = FALSE
+    )
+  }
+
+  if (nrow(data) == 0) {
+    data[[key_column]] <- character(0)
+    return(data)
+  }
+
+  column_parts <- lapply(columns, function(col) {
+    raw <- data[[col]]
+    text <- trimws(as.character(raw))
+    text[is.na(raw)] <- ""
+    ifelse(nzchar(text), build_key(col, text), "")
+  })
+
+  keys <- vapply(seq_len(nrow(data)), function(i) {
+    row_parts <- vapply(column_parts, function(part) part[[i]], character(1), USE.NAMES = FALSE)
+    row_parts <- row_parts[nzchar(row_parts)]
+    paste(row_parts, collapse = " && ")
+  }, character(1))
+
+  empty_rows <- which(!nzchar(keys))
+  if (length(empty_rows) > 0) {
+    stop(
+      sprintf(
+        "Cannot build Key values for row(s) with empty source values across selected columns: %s.",
+        paste(empty_rows, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  data[[key_column]] <- keys
+
+  if (isTRUE(drop_source)) {
+    keep_cols <- setdiff(names(data), columns)
+    data <- data[, keep_cols, drop = FALSE]
+  }
+
+  data
+}
+
 #' Normalize Key Expressions
 #'
 #' Normalize key strings by removing stored-form prefixes (for example

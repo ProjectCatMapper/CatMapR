@@ -1,54 +1,56 @@
-# CatMapR API Stability Contract
+# CatMapR Public API Contract (Pre-release)
 
-Effective date: 2026-03-22
+Effective date: 2026-04-08
 
 ## Purpose
-This document defines the stability commitments for CatMapR's current public interface.
+This document records the current public CatMapR interface and the backend
+endpoint contracts it relies on while the package is pre-release.
 
-## Stable Public R Interface
-The following exported functions are considered stable and should not receive breaking signature changes within the current minor release line without a migration path:
+## Current Public R Interface
 
 ### Dataset metadata
-- `listDatasetMetadata()`
-- `allDatasets()`
-- `getDatasetMetadata()`
-- `datasetInfo()`
+- `list_datasets()`
+- `get_dataset_metadata()`
 
 ### Search and translation
-- `CMIDinfo()`
-- `searchDatabase()`
-- `translate()`
+- `get_cmid_info()`
+- `search_database()`
+- `translate_rows()`
 
 ### Merge and join
-- `createLinkfile()`
-- `joinDatasets()`
+- `get_merge_template()`
+- `get_merge_template_summary()`
+- `build_merge_syntax()`
+- `propose_merge_links()`
+- `join_datasets()`
 
 ### Edit/upload
-- `uploadInputNodes()`
-- `submitEditUpload()`
+- `upload_rows()`
+- `prepare_upload_rows()`
+- `build_key()`
+- `build_key_from_columns()`
+- `normalize_key()`
+- `is_normalized_key()`
 
 ### Metadata introspection
-- `getDomains()`
-- `getUploadProperties()`
+- `get_domains()`
+- `get_upload_properties()`
+- `get_properties()`
 
-## Experimental / rollout-dependent interface
-The following exported function is public but depends on deployment support that may lag behind package releases:
+## Removed Legacy Surface
+Legacy pre-rename wrappers and aliases were removed from exports; only the
+current snake_case public API in this document is supported.
 
-- `getProperties()`
+## Rollout-dependent Interface
+The function `get_properties()` depends on deployments exposing:
 
-Current expectation:
-- `getProperties()` should target API deployments exposing `GET /metadata/properties/<database>`.
-- Until all production deployments expose that route, callers may need to point `CATMAPR_API_URL` (or `url`) at a deployment that has it.
+- `GET /metadata/properties/<database>`
 
-## Freeze Rules
-- Do not remove or rename exported functions.
-- Do not rename existing arguments.
-- Do not change argument semantics in a way that breaks valid existing calls.
-- Do not remove fields from successful return payloads that downstream scripts may depend on.
-- Bug fixes and stricter validation are allowed if successful existing usage is preserved.
+During rollout, some deployments may support
+`get_upload_properties()` before `get_properties()`.
 
 ## Backend Endpoint Compatibility Requirement
-CatMapR currently calls these API endpoints. Breaking changes to these endpoints should be avoided unless a compatibility path is provided:
+CatMapR currently calls these API endpoints:
 
 - `GET /CMID/{database}/{cmid}`
 - `GET /allDatasets`
@@ -61,17 +63,11 @@ CatMapR currently calls these API endpoints. Breaking changes to these endpoints
 - `POST /joinDatasets`
 - `POST /proposeMergeSubmit`
 - `POST /uploadInputNodes`
-- `POST /updateWaitingUSES` (internal post-upload trigger used by `submitEditUpload()`)
+- `POST /uploadInputNodesStatus`
+- `POST /updateWaitingUSES` (triggered internally by `upload_rows()`)
 
-### Endpoint Compatibility Rules
-- Do not remove these endpoints without introducing versioned replacements.
-- Do not change required parameter names or types without backward compatibility.
-- Do not remove response fields that are already consumed by CatMapR wrappers.
-- If behavior must change, ship additive changes first and announce deprecation before removal.
-
-## Change Management
-- Any proposed breaking change must include:
-  - a migration plan,
-  - deprecation timeline,
-  - and corresponding CatMapR release notes.
-- Breaking changes should be deferred to a major version transition.
+## Change Management (Pre-release)
+- Since CatMapR has not been officially released, backward compatibility is
+  not guaranteed.
+- Any public rename or signature change must update wrappers, tests, vignettes,
+  README, and pkgdown references in the same change set.

@@ -13,10 +13,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' getProperties(database = "SocioMap")
-#' getProperties(database = "ArchaMap")
+#' get_properties(database = "SocioMap")
+#' get_properties(database = "ArchaMap")
 #' }
-getProperties <- function(database = "SocioMap", url = NULL) {
+get_properties <- function(database = "SocioMap", url = NULL) {
   database <- validate_database(database)
 
   endpoint <- paste0("metadata/properties/", tolower(database))
@@ -48,10 +48,10 @@ getProperties <- function(database = "SocioMap", url = NULL) {
 #' @export
 #' @examples
 #' \dontrun{
-#' getUploadProperties(database = "SocioMap")
-#' getUploadProperties(database = "ArchaMap")
+#' get_upload_properties(database = "SocioMap")
+#' get_upload_properties(database = "ArchaMap")
 #' }
-getUploadProperties <- function(database = "SocioMap", url = NULL) {
+get_upload_properties <- function(database = "SocioMap", url = NULL) {
   database <- validate_database(database)
 
   endpoint <- paste0("metadata/uploadProperties/", tolower(database))
