@@ -122,22 +122,42 @@ normalize_property_table_response <- function(response) {
 }
 
 normalize_property_collection <- function(x) {
+  empty_table <- data.frame(
+    property = character(0),
+    description = character(0),
+    stringsAsFactors = FALSE
+  )
+
   if (is.null(x)) {
-    return(data.frame(
-      property = character(0),
-      description = character(0),
-      stringsAsFactors = FALSE
-    ))
+    return(empty_table)
   }
 
   if (is.data.frame(x)) {
     out <- x
   } else if (is.list(x) && length(x) == 0) {
-    out <- data.frame(
-      property = character(0),
-      description = character(0),
-      stringsAsFactors = FALSE
-    )
+    out <- empty_table
+  } else if (is.list(x) && length(x) > 0 && all(vapply(x, is.list, logical(1)))) {
+    row_names <- unique(unlist(lapply(x, names), use.names = FALSE))
+    out_cols <- lapply(row_names, function(name) {
+      values <- lapply(x, function(row) row[[name]])
+      values <- lapply(values, function(value) {
+        if (is.null(value) || length(value) == 0) {
+          return(NA)
+        }
+        if (length(value) == 1 && !is.list(value)) {
+          return(value[[1]])
+        }
+        unname(unlist(value, recursive = TRUE, use.names = FALSE))
+      })
+
+      if (any(vapply(values, function(value) length(value) > 1, logical(1)))) {
+        return(I(values))
+      }
+
+      unlist(values, use.names = FALSE)
+    })
+    names(out_cols) <- row_names
+    out <- as.data.frame(out_cols, stringsAsFactors = FALSE, check.names = FALSE)
   } else {
     out <- as.data.frame(x, stringsAsFactors = FALSE, check.names = FALSE)
   }
