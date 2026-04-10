@@ -535,7 +535,7 @@ test_that("getMergingTemplateSummary calls canonical summary endpoint and preser
   expect_true(all(c("stackTransform", "datasetTransform", "variableFilter", "summaryFilter", "summaryWeight") %in% names(result$mergingTies)))
 })
 
-test_that("getUploadProperties preserves transform-related property metadata", {
+test_that("get_upload_properties preserves transform-related property metadata", {
   local_mocked_bindings(
     callAPI = function(endpoint, parameters, request = "GET", ...) {
       list(
@@ -554,7 +554,7 @@ test_that("getUploadProperties preserves transform-related property metadata", {
     .package = "CatMapR"
   )
 
-  result <- CatMapR::getUploadProperties(database = "ArchaMap")
+  result <- CatMapR::get_upload_properties(database = "ArchaMap")
 
   expect_identical(
     result$usesProperties$property,
