@@ -167,8 +167,18 @@ prepare_upload_rows <- function(df,
 
   normalized_properties <- normalize_upload_properties(properties)
   rows <- coerce_upload_rows(df)
-  validate_form_data(form_data = form_data, rows = rows, action = action)
-  validate_required_columns_by_action(rows = rows, action = action, form_data = form_data)
+  validate_form_data(
+    form_data = form_data,
+    rows = rows,
+    action = action,
+    merging_type = merging_type
+  )
+  validate_required_columns_by_action(
+    rows = rows,
+    action = action,
+    form_data = form_data,
+    merging_type = merging_type
+  )
 
   list(
     database = database,
@@ -306,13 +316,22 @@ normalize_upload_properties <- function(properties) {
   validate_character_collection(properties, "properties")
 }
 
-validate_form_data <- function(form_data, rows, action = "add_node") {
-  required_form_fields <- c(
-    "datasetID",
-    "cmNameColumn",
-    "categoryNamesColumn",
-    "cmidColumn",
-    "keyColumn"
+validate_form_data <- function(form_data,
+                               rows,
+                               action = "add_node",
+                               merging_type = "0") {
+  required_form_fields <- switch(
+    action,
+    add_merging = character(0),
+    merging_add = character(0),
+    merging_replace = character(0),
+    c(
+      "datasetID",
+      "cmNameColumn",
+      "categoryNamesColumn",
+      "cmidColumn",
+      "keyColumn"
+    )
   )
   missing <- required_form_fields[!required_form_fields %in% names(form_data)]
   if (length(missing) > 0) {
@@ -320,6 +339,10 @@ validate_form_data <- function(form_data, rows, action = "add_node") {
       sprintf("`form_data` is missing required field(s): %s.", paste(missing, collapse = ", ")),
       call. = FALSE
     )
+  }
+
+  if (action %in% c("add_merging", "merging_add", "merging_replace")) {
+    return(invisible(NULL))
   }
 
   mapped <- switch(
@@ -389,7 +412,50 @@ validate_form_data <- function(form_data, rows, action = "add_node") {
   invisible(NULL)
 }
 
-validate_required_columns_by_action <- function(rows, action, form_data) {
+infer_merging_required_columns <- function(row_cols, action, merging_type = "0") {
+  key_columns <- grep("^Key_", row_cols, value = TRUE)
+  has_variable <- "variableID" %in% row_cols
+  has_equivalence <- all(c("categoryID1", "categoryID2") %in% row_cols)
+  has_equivalence_add <- "categoryID" %in% row_cols
+  uses_dataset_transform <- "datasetTransform" %in% row_cols
+
+  if (action == "add_merging") {
+    if (identical(merging_type, "merging_ties_to_variables") || has_variable) {
+      return(c("mergingID", "datasetID", "variableID", "varName"))
+    }
+    if (identical(merging_type, "equivalence_ties") || has_equivalence_add) {
+      if (length(key_columns) == 2) {
+        return(c("mergingID", "categoryID", key_columns))
+      }
+      return(c("mergingID", "categoryID", "Key", "datasetID"))
+    }
+    return(c("mergingID", "datasetID"))
+  }
+
+  if (action %in% c("merging_add", "merging_replace")) {
+    if (identical(merging_type, "merging_ties_to_variables") || has_variable) {
+      required <- c("stackID", "variableID")
+      if (uses_dataset_transform) {
+        required <- c(required, "datasetID")
+      }
+      return(required)
+    }
+    if (identical(merging_type, "equivalence_ties") || has_equivalence) {
+      return(c("categoryID1", "categoryID2", "Key", "datasetID", "stackID"))
+    }
+    stop(
+      sprintf(
+        "Could not infer required columns for `action = \"%s\"`. Include merge identifiers such as variableID/stackID or categoryID1/categoryID2, or set `merging_type`.",
+        action
+      ),
+      call. = FALSE
+    )
+  }
+
+  character(0)
+}
+
+validate_required_columns_by_action <- function(rows, action, form_data, merging_type = "0") {
   if (length(rows) == 0) {
     return(invisible(NULL))
   }
@@ -404,11 +470,15 @@ validate_required_columns_by_action <- function(rows, action, form_data) {
     node_add = c(cmid_col),
     node_replace = c(cmid_col),
     add_node = c(form_data$cmNameColumn, form_data$categoryNamesColumn, key_col, "datasetID", "label"),
-    add_merging = c(cmid_col, key_col, "datasetID"),
-    merging_add = c(cmid_col, key_col, "datasetID"),
-    merging_replace = c(cmid_col, key_col, "datasetID"),
     character(0)
   )
+  if (action %in% c("add_merging", "merging_add", "merging_replace")) {
+    required <- infer_merging_required_columns(
+      row_cols = row_cols,
+      action = action,
+      merging_type = merging_type
+    )
+  }
   required <- unique(required[nzchar(required)])
   missing <- required[!required %in% row_cols]
   if (length(missing) > 0) {
