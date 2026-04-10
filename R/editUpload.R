@@ -6,11 +6,17 @@
 #' @param df Data frame or list of row objects to upload.
 #' @param database Target database, typically `"SocioMap"` or `"ArchaMap"`.
 #' @param form_data Named list matching CatMapper edit-page `formData`.
-#' @param action Upload action option. Supported values:
-#'   - `"add_node"`
-#'   - `"add_uses"`
-#'   - `"update_add"`
-#'   - `"update_replace"`
+#' @param action Upload action option. Supported values map directly to the
+#'   CatMapperJS Edit-page advanced upload options:
+#'   - `"add_node"` = "Adding new node for every row"
+#'   - `"node_add"` = "Updating existing Node properties--add or add to properties"
+#'   - `"node_replace"` = "Updating existing Node properties--replace one property"
+#'   - `"add_uses"` = "Adding new uses ties (with old or new nodes)"
+#'   - `"update_add"` = "Updating existing USES only--add or add to properties"
+#'   - `"update_replace"` = "Updating existing USES only--replace one property"
+#'   - `"add_merging"` = "Adding new merging ties for every row"
+#'   - `"merging_add"` = "Updating existing Merging tie properties--add or add to properties"
+#'   - `"merging_replace"` = "Updating existing Merging tie properties--replace one property"
 #' @param add_options Named list with `district` and `recordyear` booleans.
 #' @param properties Optional vector/list of upload property names to include.
 #' @param merging_type Optional merging mode used by merge upload workflows.
@@ -161,7 +167,7 @@ prepare_upload_rows <- function(df,
 
   normalized_properties <- normalize_upload_properties(properties)
   rows <- coerce_upload_rows(df)
-  validate_form_data(form_data = form_data, rows = rows)
+  validate_form_data(form_data = form_data, rows = rows, action = action)
   validate_required_columns_by_action(rows = rows, action = action, form_data = form_data)
 
   list(
@@ -300,7 +306,7 @@ normalize_upload_properties <- function(properties) {
   validate_character_collection(properties, "properties")
 }
 
-validate_form_data <- function(form_data, rows) {
+validate_form_data <- function(form_data, rows, action = "add_node") {
   required_form_fields <- c(
     "datasetID",
     "cmNameColumn",
@@ -316,13 +322,55 @@ validate_form_data <- function(form_data, rows) {
     )
   }
 
-  mapped <- unique(c(
-    form_data$cmNameColumn,
-    form_data$categoryNamesColumn,
-    form_data$cmidColumn,
-    form_data$keyColumn,
-    as.list(form_data$alternateCategoryNamesColumns)
-  ))
+  mapped <- switch(
+    action,
+    add_node = unique(c(
+      form_data$cmNameColumn,
+      form_data$categoryNamesColumn,
+      form_data$cmidColumn,
+      form_data$keyColumn,
+      as.list(form_data$alternateCategoryNamesColumns)
+    )),
+    add_uses = unique(c(
+      form_data$cmNameColumn,
+      form_data$categoryNamesColumn,
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    update_add = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    update_replace = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    node_add = unique(c(
+      form_data$cmidColumn
+    )),
+    node_replace = unique(c(
+      form_data$cmidColumn
+    )),
+    add_merging = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    merging_add = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    merging_replace = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    unique(c(
+      form_data$cmNameColumn,
+      form_data$categoryNamesColumn,
+      form_data$cmidColumn,
+      form_data$keyColumn,
+      as.list(form_data$alternateCategoryNamesColumns)
+    ))
+  )
   mapped <- mapped[vapply(mapped, function(x) is.character(x) && length(x) == 1 && nzchar(x), logical(1))]
   if (length(rows) == 0 || length(mapped) == 0) {
     return(invisible(NULL))
@@ -353,7 +401,12 @@ validate_required_columns_by_action <- function(rows, action, form_data) {
     add_uses = c(cmid_col, key_col, "datasetID"),
     update_add = c(cmid_col, key_col, "datasetID"),
     update_replace = c(cmid_col, key_col, "datasetID"),
+    node_add = c(cmid_col),
+    node_replace = c(cmid_col),
     add_node = c(form_data$cmNameColumn, form_data$categoryNamesColumn, key_col, "datasetID", "label"),
+    add_merging = c(cmid_col, key_col, "datasetID"),
+    merging_add = c(cmid_col, key_col, "datasetID"),
+    merging_replace = c(cmid_col, key_col, "datasetID"),
     character(0)
   )
   required <- unique(required[nzchar(required)])
@@ -537,7 +590,19 @@ sanitize_simple_upload_key_values <- function(rows, so, formData) {
 #' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
 #' @param formData Named list matching the edit-page \code{formData} payload.
 #' @param so Upload mode, usually \code{"standard"} or \code{"simple"}.
-#' @param ao Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.
+#' @param ao Advanced upload option. Supported values map directly to the
+#'   CatMapperJS Edit-page advanced upload options:
+#'   \itemize{
+#'   \item \code{"add_node"} = "Adding new node for every row"
+#'   \item \code{"node_add"} = "Updating existing Node properties--add or add to properties"
+#'   \item \code{"node_replace"} = "Updating existing Node properties--replace one property"
+#'   \item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
+#'   \item \code{"update_add"} = "Updating existing USES only--add or add to properties"
+#'   \item \code{"update_replace"} = "Updating existing USES only--replace one property"
+#'   \item \code{"add_merging"} = "Adding new merging ties for every row"
+#'   \item \code{"merging_add"} = "Updating existing Merging tie properties--add or add to properties"
+#'   \item \code{"merging_replace"} = "Updating existing Merging tie properties--replace one property"
+#'   }
 #' @param addoptions Named list with \code{district} and \code{recordyear} booleans.
 #' @param allContext Optional vector/list of contextual columns.
 #' @param mergingType Optional merging mode used by merge upload workflows.
@@ -546,6 +611,12 @@ sanitize_simple_upload_key_values <- function(rows, so, formData) {
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
+#' @details
+#' The \code{ao} argument mirrors the CatMapperJS Edit-page advanced upload
+#' option values. For example, the UI label "Updating existing Node
+#' properties--replace one property" maps to \code{"node_replace"}, while
+#' "Updating existing USES only--replace one property" maps to
+#' \code{"update_replace"}.
 #' @export
 uploadInputNodes <- function(df,
                              database,

@@ -385,6 +385,55 @@ test_that("prepare_upload_rows validates action-required columns", {
   )
 })
 
+test_that("prepare_upload_rows accepts node_replace with only CMID plus one property column", {
+  prepared <- CatMapR::prepare_upload_rows(
+    df = data.frame(
+      CMID = "AM353841",
+      CMName = "Box Number",
+      stringsAsFactors = FALSE
+    ),
+    database = "ArchaMap",
+    form_data = list(
+      domain = "VARIABLE",
+      subdomain = "VARIABLE",
+      datasetID = "",
+      cmNameColumn = "CMName",
+      categoryNamesColumn = "",
+      cmidColumn = "CMID",
+      keyColumn = "Key"
+    ),
+    action = "node_replace"
+  )
+
+  expect_type(prepared, "list")
+  expect_identical(prepared$action, "node_replace")
+})
+
+test_that("prepare_upload_rows validates merging_replace-required columns", {
+  expect_error(
+    CatMapR::prepare_upload_rows(
+      df = data.frame(
+        CMID = "AM1",
+        datasetID = "AD1",
+        stringsAsFactors = FALSE
+      ),
+      database = "ArchaMap",
+      form_data = list(
+        domain = "VARIABLE",
+        subdomain = "VARIABLE",
+        datasetID = "",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      action = "merging_replace"
+    ),
+    "Required upload column(s) missing",
+    fixed = TRUE
+  )
+})
+
 test_that("key helpers build and normalize expressions", {
   expect_identical(CatMapR::build_key("Type", "Adamana Brown"), "Type == Adamana Brown")
   rows <- data.frame(
