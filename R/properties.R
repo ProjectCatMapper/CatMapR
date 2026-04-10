@@ -140,7 +140,20 @@ normalize_property_collection <- function(x) {
     row_names <- unique(unlist(lapply(x, names), use.names = FALSE))
     out_cols <- lapply(row_names, function(name) {
       values <- lapply(x, function(row) row[[name]])
-      values[sapply(values, is.null)] <- NA
+      values <- lapply(values, function(value) {
+        if (is.null(value) || length(value) == 0) {
+          return(NA)
+        }
+        if (length(value) == 1 && !is.list(value)) {
+          return(value[[1]])
+        }
+        unname(unlist(value, recursive = TRUE, use.names = FALSE))
+      })
+
+      if (any(vapply(values, function(value) length(value) > 1, logical(1)))) {
+        return(I(values))
+      }
+
       unlist(values, use.names = FALSE)
     })
     names(out_cols) <- row_names
