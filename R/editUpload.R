@@ -6,11 +6,17 @@
 #' @param df Data frame or list of row objects to upload.
 #' @param database Target database, typically `"SocioMap"` or `"ArchaMap"`.
 #' @param form_data Named list matching CatMapper edit-page `formData`.
-#' @param action Upload action option. Supported values:
-#'   - `"add_node"`
-#'   - `"add_uses"`
-#'   - `"update_add"`
-#'   - `"update_replace"`
+#' @param action Upload action option. Supported values map directly to the
+#'   CatMapperJS Edit-page advanced upload options:
+#'   - `"add_node"` = "Adding new node for every row"
+#'   - `"node_add"` = "Updating existing Node properties--add or add to properties"
+#'   - `"node_replace"` = "Updating existing Node properties--replace one property"
+#'   - `"add_uses"` = "Adding new uses ties (with old or new nodes)"
+#'   - `"update_add"` = "Updating existing USES only--add or add to properties"
+#'   - `"update_replace"` = "Updating existing USES only--replace one property"
+#'   - `"add_merging"` = "Adding new merging ties for every row"
+#'   - `"merging_add"` = "Updating existing Merging tie properties--add or add to properties"
+#'   - `"merging_replace"` = "Updating existing Merging tie properties--replace one property"
 #' @param add_options Named list with `district` and `recordyear` booleans.
 #' @param properties Optional vector/list of upload property names to include.
 #' @param merging_type Optional merging mode used by merge upload workflows.
@@ -139,7 +145,8 @@ maybe_trigger_waiting_uses_refresh <- function(database, url = NULL) {
 #'
 #' @param df Data frame or list of row objects to upload.
 #' @param form_data Named list matching CatMapper edit-page `formData`.
-#' @param action Upload action option.
+#' @param action Upload action option. See `upload_rows()` for the full
+#'   CatMapperJS crosswalk of supported values and GUI labels.
 #' @param properties Optional vector/list of upload property names to include.
 #' @param merging_type Optional merging mode used by merge upload workflows.
 #' @param database Target database, typically `"SocioMap"` or `"ArchaMap"`.
@@ -537,7 +544,19 @@ sanitize_simple_upload_key_values <- function(rows, so, formData) {
 #' @param database Target database, typically \code{"SocioMap"} or \code{"ArchaMap"}.
 #' @param formData Named list matching the edit-page \code{formData} payload.
 #' @param so Upload mode, usually \code{"standard"} or \code{"simple"}.
-#' @param ao Advanced upload option, e.g. \code{"add_node"}, \code{"add_uses"}, \code{"update_add"}.
+#' @param ao Advanced upload option. Supported values map directly to the
+#'   CatMapperJS Edit-page advanced upload options:
+#'   \itemize{
+#'   \item \code{"add_node"} = "Adding new node for every row"
+#'   \item \code{"node_add"} = "Updating existing Node properties--add or add to properties"
+#'   \item \code{"node_replace"} = "Updating existing Node properties--replace one property"
+#'   \item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
+#'   \item \code{"update_add"} = "Updating existing USES only--add or add to properties"
+#'   \item \code{"update_replace"} = "Updating existing USES only--replace one property"
+#'   \item \code{"add_merging"} = "Adding new merging ties for every row"
+#'   \item \code{"merging_add"} = "Updating existing Merging tie properties--add or add to properties"
+#'   \item \code{"merging_replace"} = "Updating existing Merging tie properties--replace one property"
+#'   }
 #' @param addoptions Named list with \code{district} and \code{recordyear} booleans.
 #' @param allContext Optional vector/list of contextual columns.
 #' @param mergingType Optional merging mode used by merge upload workflows.
@@ -546,6 +565,12 @@ sanitize_simple_upload_key_values <- function(rows, so, formData) {
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
+#' @details
+#' The \code{ao} argument mirrors the CatMapperJS Edit-page advanced upload
+#' option values. For example, the UI label "Updating existing Node
+#' properties--replace one property" maps to \code{"node_replace"}, while
+#' "Updating existing USES only--replace one property" maps to
+#' \code{"update_replace"}.
 #' @export
 uploadInputNodes <- function(df,
                              database,

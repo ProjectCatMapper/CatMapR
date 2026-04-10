@@ -225,6 +225,23 @@ already be full expressions like `VARIABLE == VALUE` (and may include `&&`).
 the graph database after upload submission. This refresh is fire-and-forget
 and is not polled for completion.
 
+#### Full edit upload action crosswalk
+
+This table maps CatMapR upload action values to the exact CatMapperJS Edit-page
+advanced option labels.
+
+| CatMapR `action` value | Edit page GUI value | Typical purpose |
+| --- | --- | --- |
+| `add_node` | `Adding new node for every row` | Create new category or dataset nodes from upload rows. |
+| `node_add` | `Updating existing Node properties--add or add to properties` | Add one or more properties to existing nodes without replacing current values. |
+| `node_replace` | `Updating existing Node properties--replace one property` | Replace one property value on existing nodes. |
+| `add_uses` | `Adding new uses ties (with old or new nodes)` | Create dataset-to-category `USES` ties. |
+| `update_add` | `Updating existing USES only--add or add to properties` | Add one or more properties to existing `USES` ties. |
+| `update_replace` | `Updating existing USES only--replace one property` | Replace one property value on existing `USES` ties. |
+| `add_merging` | `Adding new merging ties for every row` | Create new merging ties from upload rows. |
+| `merging_add` | `Updating existing Merging tie properties--add or add to properties` | Add one or more properties to existing merging ties. |
+| `merging_replace` | `Updating existing Merging tie properties--replace one property` | Replace one property value on existing merging ties. |
+
 For metadata reuse, normalize stored-form keys before upload:
 
 ```r
