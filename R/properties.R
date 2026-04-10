@@ -122,22 +122,29 @@ normalize_property_table_response <- function(response) {
 }
 
 normalize_property_collection <- function(x) {
+  empty_table <- data.frame(
+    property = character(0),
+    description = character(0),
+    stringsAsFactors = FALSE
+  )
+
   if (is.null(x)) {
-    return(data.frame(
-      property = character(0),
-      description = character(0),
-      stringsAsFactors = FALSE
-    ))
+    return(empty_table)
   }
 
   if (is.data.frame(x)) {
     out <- x
   } else if (is.list(x) && length(x) == 0) {
-    out <- data.frame(
-      property = character(0),
-      description = character(0),
-      stringsAsFactors = FALSE
-    )
+    out <- empty_table
+  } else if (is.list(x) && length(x) > 0 && all(vapply(x, is.list, logical(1)))) {
+    row_names <- unique(unlist(lapply(x, names), use.names = FALSE))
+    out_cols <- lapply(row_names, function(name) {
+      values <- lapply(x, function(row) row[[name]])
+      values[sapply(values, is.null)] <- NA
+      unlist(values, use.names = FALSE)
+    })
+    names(out_cols) <- row_names
+    out <- as.data.frame(out_cols, stringsAsFactors = FALSE, check.names = FALSE)
   } else {
     out <- as.data.frame(x, stringsAsFactors = FALSE, check.names = FALSE)
   }

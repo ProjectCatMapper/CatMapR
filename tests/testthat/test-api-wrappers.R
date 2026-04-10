@@ -407,3 +407,394 @@ test_that("key helpers build and normalize expressions", {
   expect_true(CatMapR::is_normalized_key("Region == Flagstaff"))
   expect_false(CatMapR::is_normalized_key("Key == Region == Flagstaff"))
 })
+
+test_that("getMergingTemplate calls canonical template endpoint and normalizes rows", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(
+        list(
+          mergingID = "AD354277",
+          mergingCMName = "Becoming Hopi merge",
+          mergingShortName = "BH merge",
+          mergingCitation = "Citation",
+          stackID = "",
+          datasetID = "",
+          datasetName = "",
+          filePath = "Please enter the working directory as the first filepath"
+        ),
+        list(
+          mergingID = "AD354277",
+          mergingCMName = "Becoming Hopi merge",
+          mergingShortName = "BH merge",
+          mergingCitation = "Citation",
+          stackID = "AS1",
+          datasetID = "AD354273",
+          datasetName = "Adobe Bricks",
+          filePath = ""
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getMergingTemplate(cmid = "AD354277", database = "ArchaMap")
+
+  expect_s3_class(result, "data.frame")
+  expect_identical(captured$endpoint, "merge/template/archamap/AD354277")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+  expect_identical(
+    names(result),
+    c("mergingID", "mergingCMName", "mergingShortName", "mergingCitation", "stackID", "datasetID", "datasetName", "filePath")
+  )
+  expect_identical(result$datasetID[[2]], "AD354273")
+})
+
+test_that("getMergingTemplateSummary calls canonical summary endpoint and preserves transform fields", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      list(
+        nodeType = "MERGING",
+        stackSummary = list(
+          list(
+            stackID = "AS1",
+            stackCMName = "Stack 1",
+            datasetCount = 2,
+            equivalenceTieCount = 8,
+            keyReassignmentCount = 1,
+            variableCount = 3
+          )
+        ),
+        stackSummaryTotals = list(
+          datasetCount = 2,
+          equivalenceTieCount = 8,
+          keyReassignmentCount = 1,
+          variableCount = 3
+        ),
+        datasetSummary = list(),
+        mergingTemplateCount = 0,
+        mergingTies = list(
+          list(
+            mergingID = "AD354277",
+            mergingCMName = "Becoming Hopi merge",
+            stackID = "AS1",
+            stackCMName = "Stack 1",
+            relationship = "MERGING",
+            targetLabels = c("VARIABLE", "UNIT"),
+            targetCMID = "AV1",
+            targetCMName = "Wall thickness",
+            tieStackID = "AS1",
+            varName = "wall_thickness",
+            stackTransform = "[{\"op\":\"as_numeric\",\"target\":\"wall_thickness\"}]",
+            datasetTransform = "[{\"op\":\"copy\",\"target\":\"wall_thickness\",\"sources\":[\"WallThick\"]}]",
+            variableFilter = "[{\"op\":\"drop_na\",\"target\":\"wall_thickness\"}]",
+            summaryStatistic = "mean",
+            summaryFilter = NA_character_,
+            summaryWeight = NA_character_
+          )
+        ),
+        equivalenceTies = list(
+          list(
+            stackID = "AS1",
+            datasetID = "AD354273",
+            Key = "type == adobe",
+            originalCMID = "AM1",
+            originalCMName = "Adobe",
+            equivalentCMID = "AM2",
+            equivalentCMName = "Adobe brick",
+            selfReference = FALSE
+          )
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getMergingTemplateSummary(cmid = "AD354277", database = "ArchaMap")
+
+  expect_type(result, "list")
+  expect_identical(captured$endpoint, "merge/template/summary/archamap/AD354277")
+  expect_identical(captured$parameters, list())
+  expect_identical(captured$request, "GET")
+  expect_identical(result$nodeType, "MERGING")
+  expect_s3_class(result$stackSummary, "data.frame")
+  expect_s3_class(result$mergingTies, "data.frame")
+  expect_identical(result$stackSummaryTotals$datasetCount, 2)
+  expect_identical(result$mergingTies$targetLabels[[1]], c("VARIABLE", "UNIT"))
+  expect_identical(result$mergingTies$variableFilter[[1]], "[{\"op\":\"drop_na\",\"target\":\"wall_thickness\"}]")
+  expect_true(all(c("stackTransform", "datasetTransform", "variableFilter", "summaryFilter", "summaryWeight") %in% names(result$mergingTies)))
+})
+
+test_that("getUploadProperties preserves transform-related property metadata", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(
+        database = "archamap",
+        nodeProperties = list(),
+        usesProperties = list(
+          list(property = "stackTransform", description = "Stack-level transform"),
+          list(property = "datasetTransform", description = "Dataset-level transform"),
+          list(property = "variableFilter", description = "Filter applied before summary"),
+          list(property = "summaryStatistic", description = "Summary function"),
+          list(property = "summaryFilter", description = "Reserved summary filter"),
+          list(property = "summaryWeight", description = "Reserved summary weight")
+        )
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::getUploadProperties(database = "ArchaMap")
+
+  expect_identical(
+    result$usesProperties$property,
+    c("stackTransform", "datasetTransform", "variableFilter", "summaryStatistic", "summaryFilter", "summaryWeight")
+  )
+})
+
+test_that("camelCase property wrappers surface API errors cleanly", {
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", ...) {
+      list(error = "Not Found")
+    },
+    .package = "CatMapR"
+  )
+
+  expect_error(CatMapR::getMergingTemplate(cmid = "AD1", database = "ArchaMap"), "Not Found", fixed = TRUE)
+  expect_error(CatMapR::getMergingTemplateSummary(cmid = "AD1", database = "ArchaMap"), "Not Found", fixed = TRUE)
+})
+
+test_that("uploadInputNodes simple mode warns and strips preformatted key expressions", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$url <- url
+      captured$headers <- headers
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  rows <- data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    Key = "language == yoruba",
+    stringsAsFactors = FALSE
+  )
+
+  expect_warning(
+    result <- CatMapR::uploadInputNodes(
+      df = rows,
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "simple",
+      ao = "add_uses",
+      api_key = "cmk_abc123"
+    ),
+    "`so = \"simple\"` expects raw key values",
+    fixed = TRUE
+  )
+
+  expect_equal(result, list(ok = TRUE))
+  expect_identical(captured$parameters$df[[1]]$Key, "yoruba")
+})
+
+test_that("uploadInputNodes simple mode rejects compound key expressions", {
+  captured <- new.env(parent = emptyenv())
+  captured$called <- FALSE
+
+  local_mocked_bindings(
+    callAPI = function(...) {
+      captured$called <- TRUE
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  rows <- data.frame(
+    CMName = "Yoruba",
+    Name = "Yoruba",
+    Key = "language == yoruba && country == ng",
+    stringsAsFactors = FALSE
+  )
+
+  expect_error(
+    CatMapR::uploadInputNodes(
+      df = rows,
+      database = "SocioMap",
+      formData = list(
+        domain = "ETHNICITY",
+        subdomain = "ETHNICITY",
+        datasetID = "SD1",
+        cmNameColumn = "CMName",
+        categoryNamesColumn = "Name",
+        cmidColumn = "CMID",
+        keyColumn = "Key"
+      ),
+      so = "simple",
+      ao = "add_uses",
+      api_key = "cmk_abc123"
+    ),
+    "must use `so = \"standard\"`",
+    fixed = TRUE
+  )
+
+  expect_false(captured$called)
+})
+
+test_that("updateWaitingUSES uses env API key when api_key argument is omitted", {
+  original <- Sys.getenv("CATMAPR_API_KEY", unset = NA_character_)
+  on.exit({
+    if (is.na(original)) {
+      Sys.unsetenv("CATMAPR_API_KEY")
+    } else {
+      Sys.setenv(CATMAPR_API_KEY = original)
+    }
+  }, add = TRUE)
+  Sys.setenv(CATMAPR_API_KEY = "env-key")
+
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$headers <- headers
+      list(ok = TRUE)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::updateWaitingUSES(database = "ArchaMap")
+
+  expect_equal(result, list(ok = TRUE))
+  expect_identical(captured$endpoint, "updateWaitingUSES")
+  expect_identical(captured$request, "POST")
+  expect_identical(captured$parameters$database, "ArchaMap")
+  expect_identical(captured$headers[["X-API-Key"]], "env-key")
+})
+
+test_that("uploadInputNodesStatus posts taskId and cursor with API-key auth", {
+  captured <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    callAPI = function(endpoint, parameters, request = "GET", url = NULL, headers = NULL, ...) {
+      captured$endpoint <- endpoint
+      captured$parameters <- parameters
+      captured$request <- request
+      captured$headers <- headers
+      list(taskId = "abc123", status = "running", nextCursor = 4)
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::uploadInputNodesStatus(
+    task_id = "abc123",
+    cursor = 3,
+    api_key = "cmk_status_key"
+  )
+
+  expect_identical(captured$endpoint, "uploadInputNodesStatus")
+  expect_identical(captured$request, "POST")
+  expect_identical(captured$parameters, list(taskId = "abc123", cursor = 3L))
+  expect_identical(captured$headers[["X-API-Key"]], "cmk_status_key")
+  expect_identical(result$status, "running")
+})
+
+test_that("waitForUploadTask polls until completion", {
+  captured <- new.env(parent = emptyenv())
+  captured$cursors <- integer(0)
+
+  local_mocked_bindings(
+    uploadInputNodesStatus = function(task_id, cursor = 0L, api_key = NULL, url = NULL) {
+      captured$cursors <- c(captured$cursors, cursor)
+      if (length(captured$cursors) == 1) {
+        return(list(
+          taskId = task_id,
+          status = "running",
+          events = list("batch 1"),
+          nextCursor = 1
+        ))
+      }
+      list(
+        taskId = task_id,
+        status = "completed",
+        events = list("done"),
+        nextCursor = 2,
+        file = data.frame(CMID = "AD1", stringsAsFactors = FALSE)
+      )
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::waitForUploadTask(
+    task_id = "abc123",
+    poll_seconds = 0.001,
+    timeout_seconds = 1,
+    quiet = TRUE
+  )
+
+  expect_identical(captured$cursors, c(0L, 1L))
+  expect_identical(result$status, "completed")
+  expect_identical(result$nextCursor, 2)
+})
+
+test_that("submitEditUpload executes upload then waiting-uses refresh", {
+  captured <- new.env(parent = emptyenv())
+  captured$calls <- character(0)
+
+  local_mocked_bindings(
+    uploadInputNodes = function(...) {
+      captured$calls <- c(captured$calls, "upload")
+      list(step = "upload")
+    },
+    updateWaitingUSES = function(...) {
+      captured$calls <- c(captured$calls, "waiting")
+      list(step = "waiting")
+    },
+    .package = "CatMapR"
+  )
+
+  result <- CatMapR::submitEditUpload(
+    df = data.frame(CMName = "Yoruba", stringsAsFactors = FALSE),
+    database = "SocioMap",
+    formData = list(
+      domain = "ETHNICITY",
+      subdomain = "ETHNICITY",
+      datasetID = "SD1",
+      cmNameColumn = "CMName",
+      categoryNamesColumn = "Name",
+      cmidColumn = "CMID",
+      keyColumn = "Key"
+    ),
+    ao = "add_uses",
+    api_key = "cmk_abc123"
+  )
+
+  expect_identical(captured$calls, c("upload", "waiting"))
+  expect_identical(result$upload$step, "upload")
+  expect_identical(result$waiting_uses$step, "waiting")
+})
