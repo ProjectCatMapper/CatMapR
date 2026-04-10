@@ -25,12 +25,18 @@ upload_rows(
 
 \item{form_data}{Named list matching CatMapper edit-page \code{formData}.}
 
-\item{action}{Upload action option. Supported values:
+\item{action}{Upload action option. Supported values map directly to the
+CatMapperJS Edit-page advanced upload options:
 \itemize{
-\item \code{"add_node"}
-\item \code{"add_uses"}
-\item \code{"update_add"}
-\item \code{"update_replace"}
+\item \code{"add_node"} = "Adding new node for every row"
+\item \code{"node_add"} = "Updating existing Node properties--add or add to properties"
+\item \code{"node_replace"} = "Updating existing Node properties--replace one property"
+\item \code{"add_uses"} = "Adding new uses ties (with old or new nodes)"
+\item \code{"update_add"} = "Updating existing USES only--add or add to properties"
+\item \code{"update_replace"} = "Updating existing USES only--replace one property"
+\item \code{"add_merging"} = "Adding new merging ties for every row"
+\item \code{"merging_add"} = "Updating existing Merging tie properties--add or add to properties"
+\item \code{"merging_replace"} = "Updating existing Merging tie properties--replace one property"
 }}
 
 \item{add_options}{Named list with \code{district} and \code{recordyear} booleans.}
