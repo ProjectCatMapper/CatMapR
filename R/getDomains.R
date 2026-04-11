@@ -43,6 +43,10 @@ get_domains <- function(database = "SocioMap", advanced = FALSE) {
   domains
 }
 
+getDomains <- function(database = "SocioMap", advanced = FALSE) {
+  get_domains(database = database, advanced = advanced)
+}
+
 normalize_domain_response <- function(response) {
   if (is.null(response)) {
     return(data.frame(

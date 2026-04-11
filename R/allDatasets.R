@@ -30,3 +30,7 @@ list_datasets <- function(database) {
   # Return the response
   return(response)
 }
+
+allDatasets <- function(database) {
+  list_datasets(database = database)
+}
