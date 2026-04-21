@@ -124,7 +124,7 @@ downloadMergingTemplateWorkbook <- function(cmid,
 
   writexl::write_xlsx(list(MergingTemplate = template), path = path)
 
-  invisible(list(path = path, template = template))
+  invisible(list(path = normalizePath(path, winslash = "/", mustWork = FALSE), template = template))
 }
 
 #' Download a Link-File Workbook
@@ -177,7 +177,7 @@ downloadLinkFileWorkbook <- function(cmid,
 
   writexl::write_xlsx(sheets, path = path)
 
-  invisible(list(path = path, status = result$status, sheets = sheets))
+  invisible(list(path = normalizePath(path, winslash = "/", mustWork = FALSE), status = result$status, sheets = sheets))
 }
 
 #' Generate Merge Files
