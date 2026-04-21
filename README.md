@@ -18,12 +18,12 @@ This site contains the CatMapR package documentation, including function referen
 
 This package allows users to:
 
-* Retrieve dataset catalog metadata from CatMapper databases.
-* Search for specific categories or entities and obtain detailed information.
-* Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
-* Discover domain and property metadata used by CatMapper deployments.
-* Create and join datasets across different domains for integrated analysis.
-* Submit authenticated edit/upload operations using API-key-based write access.
+- Retrieve dataset catalog metadata from CatMapper databases.
+- Search for specific categories or entities and obtain detailed information.
+- Translate terms within datasets based on domain-specific categories, enabling data consistency and integration across diverse datasets.
+- Discover domain and property metadata used by CatMapper deployments.
+- Create and join datasets across different domains for integrated analysis.
+- Submit authenticated edit/upload operations using API-key-based write access. See the [Standard Upload/Edit Options Table](#standard-uploadedit-options) below for a summary of available upload/edit actions.
 
 ## Installation
 
@@ -73,18 +73,36 @@ remotes::install_github("projectCatMapper/CatMapR")
 
 ### UI-to-R Function Mapping
 
-* In routes like `/:database/explore`, `:database` means the app path segment, `sociomap` or `archamap` (for example `/sociomap/explore`).
+- In routes like `/:database/explore`, `:database` means the app path segment, `sociomap` or `archamap` (for example `/sociomap/explore`).
 
-| CatMapperJS route | UI workflow | CatMapR functions |
-| --- | --- | --- |
-| `/:database/explore` | Search and inspect entities/categories | `search_database()`, `get_cmid_info()`, `get_domains()` |
-| `/:database/translate` | Translate labels and review proposed matches | `translate_rows()` |
-| `/:database/merge` | Propose key mappings and join aligned tables | `propose_merge_links()`, `join_datasets()` |
-| `/:database/edit` | Authenticated edit upload with automatic waiting-USES contextual refresh | `get_upload_properties()`, `upload_rows()` |
+| CatMapperJS route      | UI workflow                                                              | CatMapR functions                                       |
+| ---------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `/:database/explore`   | Search and inspect entities/categories                                   | `search_database()`, `get_cmid_info()`, `get_domains()` |
+| `/:database/translate` | Translate labels and review proposed matches                             | `translate_rows()`                                      |
+| `/:database/merge`     | Propose key mappings and join aligned tables                             | `propose_merge_links()`, `join_datasets()`              |
+| `/:database/edit`      | Authenticated edit upload with automatic waiting-USES contextual refresh | `get_upload_properties()`, `upload_rows()`              |
 
 ## Usage
 
 Here are examples of how to use the primary functions in **CatMapR**.
+
+### Standard Upload/Edit Options
+
+The following table summarizes the available upload/edit actions and their meanings. Refer to this table when preparing data for upload or when using the `upload_rows()` function:
+
+| Option Key      | Label                                                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| add_node        | Adding new node for every row                                      | Create a new node for each row. Use when each row represents a distinct new node.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| node_add        | Updating existing Node properties--add or add to properties        | Update existing node properties by adding values without replacing current values.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| node_replace    | Updating existing Node properties--replace one property            | Update one existing node property by replacing its value. Replace mode supports one property column.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| add_uses        | Adding new uses ties (with old or new nodes)                       | Create USES ties for rows and include new or existing nodes. Rows can be aggregated by datasetID, CMID, and Key.                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| update_add      | Updating existing USES only--add or add to properties              | Update existing USES ties by adding values without removing current values.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| update_replace  | Updating existing USES only--replace one property                  | Replace one property on existing USES ties. Replace mode supports one property column.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| add_merging     | Adding new merging ties for every row                              | Create merging ties for rows in the upload file. Requires mergingID and datasetID. Variable-merging uploads also require Key so the DATASET-to-VARIABLE MERGING tie can be scoped to a specific dataset key without changing the dataset itself. If a stackID column is also provided, no new STACK node is created — the existing STACK node is used and MERGING ties are created from the MERGING node to that STACK and from that STACK to the DATASET. If stackID is omitted, a new STACK node is auto-created for each row. |
+| merging_add     | Updating existing Merging tie properties--add or add to properties | Update existing merging tie properties by adding values without replacing current values.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| merging_replace | Updating existing Merging tie properties--replace one property     | Replace one property on an existing merging tie. Replace mode supports one property column.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+When using edit/upload workflows, select the appropriate option key from this table to control the upload behavior.
 
 ### Configure API URL (Optional)
 
@@ -126,7 +144,7 @@ dataset_meta <- get_dataset_metadata(database = "SocioMap", cmid = "SD1", domain
 print(dataset_meta)
 ```
 
-Returned metadata keys can be stored-form values (for example `Key == Region == Flagstaff`).
+Returned metadata keys can be stored-form values (for example `Region == Flagstaff`).
 Use `normalize_key()` before reusing keys in upload payloads.
 
 ### Retrieve Domain Metadata
@@ -228,7 +246,7 @@ and is not polled for completion.
 For metadata reuse, normalize stored-form keys before upload:
 
 ```r
-normalize_key("Key == Region == Flagstaff")
+normalize_key("Region == Flagstaff")
 # "Region == Flagstaff"
 ```
 
@@ -368,6 +386,7 @@ print(syntax_result$download)
 ## Dependencies
 
 CatMapR relies on the following R packages:
+
 - `httr`: For making HTTP requests to the CatMapper API.
 - `jsonlite`: For handling JSON responses.
 - `tictoc`: For timing API calls.
