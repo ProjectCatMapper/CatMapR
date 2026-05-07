@@ -18,7 +18,8 @@ prepare_upload_rows(
 
 \item{form_data}{Named list matching CatMapper edit-page \code{formData}.}
 
-\item{action}{Upload action option.}
+\item{action}{Upload action option. See \code{upload_rows()} for the full
+CatMapperJS crosswalk of supported values and GUI labels.}
 
 \item{properties}{Optional vector/list of upload property names to include.}
 

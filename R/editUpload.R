@@ -145,7 +145,8 @@ maybe_trigger_waiting_uses_refresh <- function(database, url = NULL) {
 #'
 #' @param df Data frame or list of row objects to upload.
 #' @param form_data Named list matching CatMapper edit-page `formData`.
-#' @param action Upload action option.
+#' @param action Upload action option. See `upload_rows()` for the full
+#'   CatMapperJS crosswalk of supported values and GUI labels.
 #' @param properties Optional vector/list of upload property names to include.
 #' @param merging_type Optional merging mode used by merge upload workflows.
 #' @param database Target database, typically `"SocioMap"` or `"ArchaMap"`.
