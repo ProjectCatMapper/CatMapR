@@ -8,5 +8,7 @@
 ^\.tmp-lib$
 ^API_STABILITY_CONTRACT\.md$
 ^_pkgdown\.yml$
+^docs$
+^pkgdown$
 ^cran-comments\.md$
 ^vignettes/.*\.(html|pdf)$

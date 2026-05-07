@@ -385,6 +385,101 @@ test_that("prepare_upload_rows validates action-required columns", {
   )
 })
 
+test_that("prepare_upload_rows accepts node_replace with only CMID plus one property column", {
+  prepared <- CatMapR::prepare_upload_rows(
+    df = data.frame(
+      CMID = "AM353841",
+      CMName = "Box Number",
+      stringsAsFactors = FALSE
+    ),
+    database = "ArchaMap",
+    form_data = list(
+      domain = "VARIABLE",
+      subdomain = "VARIABLE",
+      datasetID = "",
+      cmNameColumn = "CMName",
+      categoryNamesColumn = "",
+      cmidColumn = "CMID",
+      keyColumn = "Key"
+    ),
+    action = "node_replace"
+  )
+
+  expect_type(prepared, "list")
+  expect_identical(prepared$action, "node_replace")
+})
+
+test_that("prepare_upload_rows validates merging_replace-required columns", {
+  expect_error(
+    CatMapR::prepare_upload_rows(
+      df = data.frame(
+        variableID = "AM1",
+        stringsAsFactors = FALSE
+      ),
+      database = "ArchaMap",
+      form_data = list(),
+      action = "merging_replace",
+      merging_type = "merging_ties_to_variables"
+    ),
+    "Required upload column(s) missing",
+    fixed = TRUE
+  )
+})
+
+test_that("prepare_upload_rows accepts merging_replace variable ties with stackID and variableID", {
+  prepared <- CatMapR::prepare_upload_rows(
+    df = data.frame(
+      stackID = "AS1",
+      variableID = "AM353841",
+      transform = "x",
+      stringsAsFactors = FALSE
+    ),
+    database = "ArchaMap",
+    form_data = list(),
+    action = "merging_replace",
+    merging_type = "merging_ties_to_variables"
+  )
+
+  expect_type(prepared, "list")
+  expect_identical(prepared$action, "merging_replace")
+})
+
+test_that("prepare_upload_rows accepts add_merging equivalence uploads with Key_ columns", {
+  prepared <- CatMapR::prepare_upload_rows(
+    df = data.frame(
+      mergingID = "AMM1",
+      categoryID = "AM1",
+      Key_AD1 = "Type == Plain",
+      Key_AD2 = "Type == Decorated",
+      stringsAsFactors = FALSE
+    ),
+    database = "ArchaMap",
+    form_data = list(),
+    action = "add_merging",
+    merging_type = "equivalence_ties"
+  )
+
+  expect_type(prepared, "list")
+  expect_identical(prepared$action, "add_merging")
+})
+
+test_that("prepare_upload_rows accepts add_merging dataset ties with mergingID and datasetID only", {
+  prepared <- CatMapR::prepare_upload_rows(
+    df = data.frame(
+      mergingID = "AMM1",
+      datasetID = "AD1",
+      stringsAsFactors = FALSE
+    ),
+    database = "ArchaMap",
+    form_data = list(),
+    action = "add_merging",
+    merging_type = "merging_ties_to_datasets"
+  )
+
+  expect_type(prepared, "list")
+  expect_identical(prepared$action, "add_merging")
+})
+
 test_that("key helpers build and normalize expressions", {
   expect_identical(CatMapR::build_key("Type", "Adamana Brown"), "Type == Adamana Brown")
   rows <- data.frame(

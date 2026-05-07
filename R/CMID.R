@@ -27,3 +27,9 @@ get_cmid_info <- function(database, cmid) {
   # Return the response
   return(response)
 }
+
+#' @rdname get_cmid_info
+#' @export
+CMIDinfo <- function(database, cmid) {
+  get_cmid_info(database = database, cmid = cmid)
+}

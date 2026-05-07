@@ -2,9 +2,15 @@
 % Please edit documentation in R/dataset.R
 \name{get_dataset_metadata}
 \alias{get_dataset_metadata}
+\alias{datasetInfo}
+\alias{getDatasetMetadata}
 \title{Retrieve Dataset Metadata by CMID}
 \usage{
 get_dataset_metadata(database, cmid, domain = "CATEGORY", children = NULL)
+
+datasetInfo(database, CMID, domain = "CATEGORY", children = NULL)
+
+getDatasetMetadata(database, CMID, domain = "CATEGORY", children = NULL)
 }
 \arguments{
 \item{database}{A string specifying the database to search in. Valid options are "SocioMap" or "ArchaMap".}
@@ -14,6 +20,8 @@ get_dataset_metadata(database, cmid, domain = "CATEGORY", children = NULL)
 \item{domain}{(Optional) A category to filter dataset relationships. Defaults to "CATEGORY" if not specified.}
 
 \item{children}{(Optional) If TRUE, include child datasets in the query.}
+
+\item{CMID}{Legacy alias for \code{cmid}.}
 }
 \value{
 A list containing dataset metadata details, or an error message if the

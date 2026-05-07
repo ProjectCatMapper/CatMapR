@@ -32,4 +32,6 @@ RoxygenNote: 7.3.3
 Imports:
     httr,
     jsonlite,
+    readxl,
+    writexl,
     tictoc

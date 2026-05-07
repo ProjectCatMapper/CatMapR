@@ -168,8 +168,18 @@ prepare_upload_rows <- function(df,
 
   normalized_properties <- normalize_upload_properties(properties)
   rows <- coerce_upload_rows(df)
-  validate_form_data(form_data = form_data, rows = rows)
-  validate_required_columns_by_action(rows = rows, action = action, form_data = form_data)
+  validate_form_data(
+    form_data = form_data,
+    rows = rows,
+    action = action,
+    merging_type = merging_type
+  )
+  validate_required_columns_by_action(
+    rows = rows,
+    action = action,
+    form_data = form_data,
+    merging_type = merging_type
+  )
 
   list(
     database = database,
@@ -307,13 +317,22 @@ normalize_upload_properties <- function(properties) {
   validate_character_collection(properties, "properties")
 }
 
-validate_form_data <- function(form_data, rows) {
-  required_form_fields <- c(
-    "datasetID",
-    "cmNameColumn",
-    "categoryNamesColumn",
-    "cmidColumn",
-    "keyColumn"
+validate_form_data <- function(form_data,
+                               rows,
+                               action = "add_node",
+                               merging_type = "0") {
+  required_form_fields <- switch(
+    action,
+    add_merging = character(0),
+    merging_add = character(0),
+    merging_replace = character(0),
+    c(
+      "datasetID",
+      "cmNameColumn",
+      "categoryNamesColumn",
+      "cmidColumn",
+      "keyColumn"
+    )
   )
   missing <- required_form_fields[!required_form_fields %in% names(form_data)]
   if (length(missing) > 0) {
@@ -323,13 +342,59 @@ validate_form_data <- function(form_data, rows) {
     )
   }
 
-  mapped <- unique(c(
-    form_data$cmNameColumn,
-    form_data$categoryNamesColumn,
-    form_data$cmidColumn,
-    form_data$keyColumn,
-    as.list(form_data$alternateCategoryNamesColumns)
-  ))
+  if (action %in% c("add_merging", "merging_add", "merging_replace")) {
+    return(invisible(NULL))
+  }
+
+  mapped <- switch(
+    action,
+    add_node = unique(c(
+      form_data$cmNameColumn,
+      form_data$categoryNamesColumn,
+      form_data$cmidColumn,
+      form_data$keyColumn,
+      as.list(form_data$alternateCategoryNamesColumns)
+    )),
+    add_uses = unique(c(
+      form_data$cmNameColumn,
+      form_data$categoryNamesColumn,
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    update_add = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    update_replace = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    node_add = unique(c(
+      form_data$cmidColumn
+    )),
+    node_replace = unique(c(
+      form_data$cmidColumn
+    )),
+    add_merging = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    merging_add = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    merging_replace = unique(c(
+      form_data$cmidColumn,
+      form_data$keyColumn
+    )),
+    unique(c(
+      form_data$cmNameColumn,
+      form_data$categoryNamesColumn,
+      form_data$cmidColumn,
+      form_data$keyColumn,
+      as.list(form_data$alternateCategoryNamesColumns)
+    ))
+  )
   mapped <- mapped[vapply(mapped, function(x) is.character(x) && length(x) == 1 && nzchar(x), logical(1))]
   if (length(rows) == 0 || length(mapped) == 0) {
     return(invisible(NULL))
@@ -348,7 +413,50 @@ validate_form_data <- function(form_data, rows) {
   invisible(NULL)
 }
 
-validate_required_columns_by_action <- function(rows, action, form_data) {
+infer_merging_required_columns <- function(row_cols, action, merging_type = "0") {
+  key_columns <- grep("^Key_", row_cols, value = TRUE)
+  has_variable <- "variableID" %in% row_cols
+  has_equivalence <- all(c("categoryID1", "categoryID2") %in% row_cols)
+  has_equivalence_add <- "categoryID" %in% row_cols
+  uses_dataset_transform <- "datasetTransform" %in% row_cols
+
+  if (action == "add_merging") {
+    if (identical(merging_type, "merging_ties_to_variables") || has_variable) {
+      return(c("mergingID", "datasetID", "variableID", "varName"))
+    }
+    if (identical(merging_type, "equivalence_ties") || has_equivalence_add) {
+      if (length(key_columns) == 2) {
+        return(c("mergingID", "categoryID", key_columns))
+      }
+      return(c("mergingID", "categoryID", "Key", "datasetID"))
+    }
+    return(c("mergingID", "datasetID"))
+  }
+
+  if (action %in% c("merging_add", "merging_replace")) {
+    if (identical(merging_type, "merging_ties_to_variables") || has_variable) {
+      required <- c("stackID", "variableID")
+      if (uses_dataset_transform) {
+        required <- c(required, "datasetID")
+      }
+      return(required)
+    }
+    if (identical(merging_type, "equivalence_ties") || has_equivalence) {
+      return(c("categoryID1", "categoryID2", "Key", "datasetID", "stackID"))
+    }
+    stop(
+      sprintf(
+        "Could not infer required columns for `action = \"%s\"`. Include merge identifiers such as variableID/stackID or categoryID1/categoryID2, or set `merging_type`.",
+        action
+      ),
+      call. = FALSE
+    )
+  }
+
+  character(0)
+}
+
+validate_required_columns_by_action <- function(rows, action, form_data, merging_type = "0") {
   if (length(rows) == 0) {
     return(invisible(NULL))
   }
@@ -360,9 +468,18 @@ validate_required_columns_by_action <- function(rows, action, form_data) {
     add_uses = c(cmid_col, key_col, "datasetID"),
     update_add = c(cmid_col, key_col, "datasetID"),
     update_replace = c(cmid_col, key_col, "datasetID"),
+    node_add = c(cmid_col),
+    node_replace = c(cmid_col),
     add_node = c(form_data$cmNameColumn, form_data$categoryNamesColumn, key_col, "datasetID", "label"),
     character(0)
   )
+  if (action %in% c("add_merging", "merging_add", "merging_replace")) {
+    required <- infer_merging_required_columns(
+      row_cols = row_cols,
+      action = action,
+      merging_type = merging_type
+    )
+  }
   required <- unique(required[nzchar(required)])
   missing <- required[!required %in% row_cols]
   if (length(missing) > 0) {
@@ -571,6 +688,28 @@ sanitize_simple_upload_key_values <- function(rows, so, formData) {
 #' properties--replace one property" maps to \code{"node_replace"}, while
 #' "Updating existing USES only--replace one property" maps to
 #' \code{"update_replace"}.
+#' @examples
+#' \dontrun{
+#' uploadInputNodes(
+#'   df = data.frame(
+#'     CMName = "Example",
+#'     Name = "Example",
+#'     CMID = "",
+#'     Key = "Type == Example",
+#'     stringsAsFactors = FALSE
+#'   ),
+#'   database = "SocioMap",
+#'   formData = list(
+#'     datasetID = "SD1",
+#'     cmNameColumn = "CMName",
+#'     categoryNamesColumn = "Name",
+#'     cmidColumn = "CMID",
+#'     keyColumn = "Key"
+#'   ),
+#'   ao = "add_node",
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 uploadInputNodes <- function(df,
                              database,
@@ -629,6 +768,10 @@ uploadInputNodes <- function(df,
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
+#' @examples
+#' \dontrun{
+#' updateWaitingUSES(database = "SocioMap", api_key = Sys.getenv("CATMAPR_API_KEY"))
+#' }
 #' @export
 updateWaitingUSES <- function(database,
                               api_key = NULL,
@@ -657,6 +800,13 @@ updateWaitingUSES <- function(database,
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed task-status payload.
+#' @examples
+#' \dontrun{
+#' uploadInputNodesStatus(
+#'   task_id = "upload-task-id",
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 uploadInputNodesStatus <- function(task_id,
                                    cursor = 0L,
@@ -694,6 +844,14 @@ uploadInputNodesStatus <- function(task_id,
 #'   \code{message()} while waiting.
 #'
 #' @return Final task-status payload.
+#' @examples
+#' \dontrun{
+#' waitForUploadTask(
+#'   task_id = "upload-task-id",
+#'   poll_seconds = 2,
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 waitForUploadTask <- function(task_id,
                               poll_seconds = 2,
@@ -764,6 +922,28 @@ waitForUploadTask <- function(task_id,
 #' @param refresh_waiting_uses If \code{TRUE}, call \code{updateWaitingUSES} after upload.
 #'
 #' @return Named list with \code{upload} and \code{waiting_uses} elements.
+#' @examples
+#' \dontrun{
+#' submitEditUpload(
+#'   df = data.frame(
+#'     CMName = "Example",
+#'     Name = "Example",
+#'     CMID = "",
+#'     Key = "Type == Example",
+#'     stringsAsFactors = FALSE
+#'   ),
+#'   database = "SocioMap",
+#'   formData = list(
+#'     datasetID = "SD1",
+#'     cmNameColumn = "CMName",
+#'     categoryNamesColumn = "Name",
+#'     cmidColumn = "CMID",
+#'     keyColumn = "Key"
+#'   ),
+#'   ao = "add_node",
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 submitEditUpload <- function(df,
                              database,

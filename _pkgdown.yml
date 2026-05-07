@@ -27,12 +27,24 @@ reference:
       - get_merge_template
       - get_merge_template_summary
       - build_merge_syntax
+      - getMergingTemplate
+      - getMergingTemplateSummary
+      - findMergingTemplate
+      - downloadMergingTemplateWorkbook
+      - downloadLinkFileWorkbook
+      - generateMergeFiles
+      - downloadMergeZip
       - propose_merge_links
       - join_datasets
   - title: Edit and upload
     contents:
       - upload_rows
       - prepare_upload_rows
+      - uploadInputNodes
+      - uploadInputNodesStatus
+      - waitForUploadTask
+      - updateWaitingUSES
+      - submitEditUpload
       - build_key
       - build_key_from_columns
       - normalize_key

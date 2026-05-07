@@ -74,3 +74,25 @@ propose_merge_links <- function(categoryLabel,
 
   return(response)
 }
+
+#' @rdname propose_merge_links
+#' @export
+createLinkfile <- function(categoryLabel,
+                           datasetChoices,
+                           database = "SocioMap",
+                           intersection = FALSE,
+                           equivalence = "standard",
+                           mergelevel = 2,
+                           resultFormat = "key-to-key",
+                           selectedKeyvariable = list()) {
+  propose_merge_links(
+    categoryLabel = categoryLabel,
+    datasetChoices = datasetChoices,
+    database = database,
+    intersection = intersection,
+    equivalence = equivalence,
+    mergelevel = mergelevel,
+    resultFormat = resultFormat,
+    selectedKeyvariable = selectedKeyvariable
+  )
+}

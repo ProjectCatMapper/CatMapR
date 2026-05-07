@@ -30,3 +30,9 @@ list_datasets <- function(database) {
   # Return the response
   return(response)
 }
+
+#' @rdname list_datasets
+#' @export
+allDatasets <- function(database) {
+  list_datasets(database = database)
+}

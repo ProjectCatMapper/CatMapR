@@ -2,9 +2,21 @@
 % Please edit documentation in R/createLinkfile.R
 \name{propose_merge_links}
 \alias{propose_merge_links}
+\alias{createLinkfile}
 \title{Create Linkfile from Dataset CMIDs}
 \usage{
 propose_merge_links(
+  categoryLabel,
+  datasetChoices,
+  database = "SocioMap",
+  intersection = FALSE,
+  equivalence = "standard",
+  mergelevel = 2,
+  resultFormat = "key-to-key",
+  selectedKeyvariable = list()
+)
+
+createLinkfile(
   categoryLabel,
   datasetChoices,
   database = "SocioMap",
