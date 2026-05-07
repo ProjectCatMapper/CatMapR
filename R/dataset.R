@@ -36,10 +36,15 @@ get_dataset_metadata <- function(database, cmid, domain = "CATEGORY", children =
   return(response)
 }
 
+#' @rdname get_dataset_metadata
+#' @param CMID Legacy alias for `cmid`.
+#' @export
 datasetInfo <- function(database, CMID, domain = "CATEGORY", children = NULL) {
   get_dataset_metadata(database = database, cmid = CMID, domain = domain, children = children)
 }
 
+#' @rdname get_dataset_metadata
+#' @export
 getDatasetMetadata <- function(database, CMID, domain = "CATEGORY", children = NULL) {
   datasetInfo(database = database, CMID = CMID, domain = domain, children = children)
 }

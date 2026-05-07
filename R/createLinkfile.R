@@ -75,6 +75,8 @@ propose_merge_links <- function(categoryLabel,
   return(response)
 }
 
+#' @rdname propose_merge_links
+#' @export
 createLinkfile <- function(categoryLabel,
                            datasetChoices,
                            database = "SocioMap",

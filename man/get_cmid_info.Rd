@@ -2,9 +2,12 @@
 % Please edit documentation in R/CMID.R
 \name{get_cmid_info}
 \alias{get_cmid_info}
+\alias{CMIDinfo}
 \title{Retrieve Details for a Specific CMID (CatMapperID)}
 \usage{
 get_cmid_info(database, cmid)
+
+CMIDinfo(database, cmid)
 }
 \arguments{
 \item{database}{A string specifying the database to search in. Valid options are "SocioMap" or "ArchaMap".}

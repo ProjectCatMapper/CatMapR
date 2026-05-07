@@ -2,9 +2,12 @@
 % Please edit documentation in R/getDomains.R
 \name{get_domains}
 \alias{get_domains}
+\alias{getDomains}
 \title{Retrieve Domain Metadata from a Specified Database}
 \usage{
 get_domains(database = "SocioMap", advanced = FALSE)
+
+getDomains(database = "SocioMap", advanced = FALSE)
 }
 \arguments{
 \item{database}{A string specifying the database from which to retrieve domains. Valid options are "SocioMap" or "ArchaMap".}

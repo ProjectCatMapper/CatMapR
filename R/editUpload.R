@@ -687,6 +687,28 @@ sanitize_simple_upload_key_values <- function(rows, so, formData) {
 #' properties--replace one property" maps to \code{"node_replace"}, while
 #' "Updating existing USES only--replace one property" maps to
 #' \code{"update_replace"}.
+#' @examples
+#' \dontrun{
+#' uploadInputNodes(
+#'   df = data.frame(
+#'     CMName = "Example",
+#'     Name = "Example",
+#'     CMID = "",
+#'     Key = "Type == Example",
+#'     stringsAsFactors = FALSE
+#'   ),
+#'   database = "SocioMap",
+#'   formData = list(
+#'     datasetID = "SD1",
+#'     cmNameColumn = "CMName",
+#'     categoryNamesColumn = "Name",
+#'     cmidColumn = "CMID",
+#'     keyColumn = "Key"
+#'   ),
+#'   ao = "add_node",
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 uploadInputNodes <- function(df,
                              database,
@@ -745,6 +767,10 @@ uploadInputNodes <- function(df,
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed API response.
+#' @examples
+#' \dontrun{
+#' updateWaitingUSES(database = "SocioMap", api_key = Sys.getenv("CATMAPR_API_KEY"))
+#' }
 #' @export
 updateWaitingUSES <- function(database,
                               api_key = NULL,
@@ -773,6 +799,13 @@ updateWaitingUSES <- function(database,
 #' @param url API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set.
 #'
 #' @return Parsed task-status payload.
+#' @examples
+#' \dontrun{
+#' uploadInputNodesStatus(
+#'   task_id = "upload-task-id",
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 uploadInputNodesStatus <- function(task_id,
                                    cursor = 0L,
@@ -810,6 +843,14 @@ uploadInputNodesStatus <- function(task_id,
 #'   \code{message()} while waiting.
 #'
 #' @return Final task-status payload.
+#' @examples
+#' \dontrun{
+#' waitForUploadTask(
+#'   task_id = "upload-task-id",
+#'   poll_seconds = 2,
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 waitForUploadTask <- function(task_id,
                               poll_seconds = 2,
@@ -880,6 +921,28 @@ waitForUploadTask <- function(task_id,
 #' @param refresh_waiting_uses If \code{TRUE}, call \code{updateWaitingUSES} after upload.
 #'
 #' @return Named list with \code{upload} and \code{waiting_uses} elements.
+#' @examples
+#' \dontrun{
+#' submitEditUpload(
+#'   df = data.frame(
+#'     CMName = "Example",
+#'     Name = "Example",
+#'     CMID = "",
+#'     Key = "Type == Example",
+#'     stringsAsFactors = FALSE
+#'   ),
+#'   database = "SocioMap",
+#'   formData = list(
+#'     datasetID = "SD1",
+#'     cmNameColumn = "CMName",
+#'     categoryNamesColumn = "Name",
+#'     cmidColumn = "CMID",
+#'     keyColumn = "Key"
+#'   ),
+#'   ao = "add_node",
+#'   api_key = Sys.getenv("CATMAPR_API_KEY")
+#' )
+#' }
 #' @export
 submitEditUpload <- function(df,
                              database,

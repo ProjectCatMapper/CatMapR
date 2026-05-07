@@ -43,6 +43,8 @@ get_domains <- function(database = "SocioMap", advanced = FALSE) {
   domains
 }
 
+#' @rdname get_domains
+#' @export
 getDomains <- function(database = "SocioMap", advanced = FALSE) {
   get_domains(database = database, advanced = advanced)
 }

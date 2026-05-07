@@ -81,6 +81,11 @@ getMergingTemplateSummary <- function(cmid, database = "SocioMap", url = NULL) {
 #'
 #' @return A list with `status`, `summary`, and `template` entries.
 #' @export
+#' @examples
+#' \dontrun{
+#' template_info <- findMergingTemplate(cmid = "AD354277", database = "ArchaMap")
+#' template_info$status
+#' }
 findMergingTemplate <- function(cmid, database = "SocioMap", url = NULL) {
   summary <- getMergingTemplateSummary(cmid = cmid, database = database, url = url)
   template <- getMergingTemplate(cmid = cmid, database = database, url = url)
@@ -109,6 +114,15 @@ findMergingTemplate <- function(cmid, database = "SocioMap", url = NULL) {
 #'
 #' @return Invisibly returns a list with `path` and `template`.
 #' @export
+#' @examples
+#' \dontrun{
+#' downloadMergingTemplateWorkbook(
+#'   cmid = "AD354277",
+#'   database = "ArchaMap",
+#'   path = "merging_template_AD354277.xlsx",
+#'   overwrite = TRUE
+#' )
+#' }
 downloadMergingTemplateWorkbook <- function(cmid,
                                             database = "SocioMap",
                                             path = NULL,
@@ -142,6 +156,15 @@ downloadMergingTemplateWorkbook <- function(cmid,
 #'
 #' @return Invisibly returns a list with `path`, `status`, and `sheets`.
 #' @export
+#' @examples
+#' \dontrun{
+#' downloadLinkFileWorkbook(
+#'   cmid = "AD354277",
+#'   database = "ArchaMap",
+#'   path = "link_file_AD354277.xlsx",
+#'   overwrite = TRUE
+#' )
+#' }
 downloadLinkFileWorkbook <- function(cmid,
                                      database = "SocioMap",
                                      path = NULL,
@@ -197,6 +220,24 @@ downloadLinkFileWorkbook <- function(cmid,
 #' @return A list with the API response, normalized template rows, and optional
 #'   `zip_path`.
 #' @export
+#' @examples
+#' \dontrun{
+#' template <- data.frame(
+#'   mergingID = "AD354277",
+#'   stackID = "AD354278",
+#'   datasetID = "AD354279",
+#'   filePath = "/path/to/local_dataset.csv",
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' result <- generateMergeFiles(
+#'   template = template,
+#'   database = "ArchaMap",
+#'   download_zip = TRUE,
+#'   overwrite = TRUE
+#' )
+#' result$zip_path
+#' }
 generateMergeFiles <- function(template,
                                database = "SocioMap",
                                download_zip = TRUE,
@@ -254,6 +295,14 @@ generateMergeFiles <- function(template,
 #'
 #' @return Normalized local output path.
 #' @export
+#' @examples
+#' \dontrun{
+#' downloadMergeZip(
+#'   hash_id = "returned_merge_hash",
+#'   path = "merged_output.zip",
+#'   overwrite = TRUE
+#' )
+#' }
 downloadMergeZip <- function(hash_id,
                              path = NULL,
                              overwrite = FALSE,
@@ -386,7 +435,7 @@ normalize_section_df <- function(x, required_cols) {
 }
 
 normalize_named_list <- function(x, required_names) {
-  out <- setNames(as.list(rep(NA, length(required_names))), required_names)
+  out <- stats::setNames(as.list(rep(NA, length(required_names))), required_names)
 
   if (is.null(x)) {
     return(out)
