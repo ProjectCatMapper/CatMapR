@@ -3,7 +3,7 @@
 #' Search for a term in a database and retrieve the CMID (CatMapperID), CMName (CatMapper Name), and other information about the matches.
 #'
 #' @param database name of database (SocioMap or ArchaMap)
-#' @param domain name of category domain to search for (DISTRICT, ETHNICITY, etc.)
+#' @param domain name of category domain to search for (AREA, ETHNICITY, etc.)
 #' @param term search term ("Afghanistan")
 #' @param property property to search by (Name, CMID, or Key)
 #' @param yearStart year to search by start

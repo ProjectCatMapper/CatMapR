@@ -30,7 +30,7 @@ translate_rows(
 
 \item{property}{property to search by (Name, CMID, or Key)}
 
-\item{domain}{name of category domain to search for (DISTRICT, ETHNICITY, etc.)}
+\item{domain}{name of category domain to search for (AREA, ETHNICITY, etc.)}
 
 \item{context}{column name of context to search by (CMID)}
 

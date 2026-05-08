@@ -21,7 +21,7 @@ search_database(
 \arguments{
 \item{database}{name of database (SocioMap or ArchaMap)}
 
-\item{domain}{name of category domain to search for (DISTRICT, ETHNICITY, etc.)}
+\item{domain}{name of category domain to search for (AREA, ETHNICITY, etc.)}
 
 \item{term}{search term ("Afghanistan")}
 

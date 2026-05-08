@@ -44,7 +44,7 @@ translate(
 
 - domain:
 
-  name of category domain to search for (DISTRICT, ETHNICITY, etc.)
+  name of category domain to search for (AREA, ETHNICITY, etc.)
 
 - context:
 

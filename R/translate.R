@@ -4,7 +4,7 @@
 #'
 #' @param rows data frame to translate
 #' @param database database to use (SocioMap or ArchaMap)
-#' @param domain name of category domain to search for (DISTRICT, ETHNICITY, etc.)
+#' @param domain name of category domain to search for (AREA, ETHNICITY, etc.)
 #' @param term column name to translate
 #' @param property property to search by (Name, CMID, or Key)
 #' @param yearStart year to search by start

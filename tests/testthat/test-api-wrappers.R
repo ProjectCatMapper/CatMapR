@@ -16,6 +16,9 @@ test_that("list_datasets uses allDatasets endpoint", {
   expect_identical(captured$endpoint, "allDatasets")
   expect_identical(captured$request, "GET")
   expect_identical(captured$parameters, list(database = "SocioMap"))
+
+  expect_equal(CatMapR::allDatasets(database = "SocioMap"), list(ok = TRUE))
+  expect_equal(CatMapR::listDatasetMetadata(database = "SocioMap"), list(ok = TRUE))
 })
 
 test_that("get_dataset_metadata sends cmid parameter", {

@@ -1,4 +1,4 @@
-# CatMapR 0.1.2.9000 (unreleased; noted 2026-03-27)
+# CatMapR 0.1.15 (2026-05-07)
 
 - Renamed exported functions to a clearer snake_case user API:
   `get_cmid_info()`, `list_datasets()`, `get_dataset_metadata()`,
@@ -21,6 +21,9 @@
 - Refreshed README, vignette, pkgdown reference structure, and stability notes to better reflect the current exported API.
 - Cleaned packaging hygiene by excluding generated vignette outputs from builds and removing stale tracked build artifacts from the repo.
 - Note: `get_properties()` depends on API deployments that expose `/metadata/properties/<database>`. During rollout, some deployments may support `get_upload_properties()` before `get_properties()`.
+- Added merge-template, upload-status, upload-wait, workbook-download, and merge-zip helpers with documentation and tests.
+- Added explicit CatMapperJS edit-page upload action crosswalk documentation.
+- Added `listDatasetMetadata()` as a compatibility alias for dataset catalog metadata.
 
 # CatMapR 0.1.2 (2026-03-18)
 

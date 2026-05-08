@@ -3,11 +3,14 @@
 \name{list_datasets}
 \alias{list_datasets}
 \alias{allDatasets}
+\alias{listDatasetMetadata}
 \title{Retrieve Dataset Catalog Metadata from a Specified Database}
 \usage{
 list_datasets(database)
 
 allDatasets(database)
+
+listDatasetMetadata(database)
 }
 \arguments{
 \item{database}{A string specifying the database from which to retrieve datasets. Valid options are "SocioMap" or "ArchaMap".}

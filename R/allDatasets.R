@@ -36,3 +36,9 @@ list_datasets <- function(database) {
 allDatasets <- function(database) {
   list_datasets(database = database)
 }
+
+#' @rdname list_datasets
+#' @export
+listDatasetMetadata <- function(database) {
+  list_datasets(database = database)
+}

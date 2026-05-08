@@ -1,20 +1,22 @@
 ## Test environments
 
-* Local: Ubuntu 22.04, R 4.1.2
-* GitHub Actions matrix enabled for ubuntu-latest, macOS-latest, windows-latest (R 4.4.1)
+* Local: Ubuntu 24.04.4 LTS, R 4.3.3
+* GitHub Actions matrix enabled for ubuntu-latest, macOS-latest, windows-latest
 
 ## R CMD check results
 
-* `R CMD build .`
-* `R CMD check --as-cran CatMapR_0.1.2.tar.gz`
-* GitHub Actions `R-CMD-check` run (2026-03-18): https://github.com/ProjectCatMapper/CatMapR/actions/runs/23232486263
-* Ubuntu check (R 4.4.1): https://github.com/ProjectCatMapper/CatMapR/actions/runs/23232486263/job/67528862563
-* macOS check (R 4.4.1): https://github.com/ProjectCatMapper/CatMapR/actions/runs/23232486263/job/67528862575
-* Windows check (R 4.4.1): https://github.com/ProjectCatMapper/CatMapR/actions/runs/23232486263/job/67528862577
+* `R CMD build CatMapR`
+* `R CMD check --as-cran CatMapR_0.1.15.tar.gz`
 
 Current expected NOTE at submission time:
 
 * "New submission"
+
+Local environment notes:
+
+* Local `R CMD check --as-cran CatMapR_0.1.15.tar.gz` completed with 3 NOTEs:
+  "New submission", "unable to verify current time", and skipped HTML
+  validation because `tidy` is not installed.
 
 ## Notes
 

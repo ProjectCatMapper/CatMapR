@@ -135,7 +135,7 @@ if (run_live) {
   upload_props <- get_upload_properties(database = "SocioMap")
 } else {
   domains <- data.frame(
-    domain = c("DISTRICT", "DISTRICT", "ETHNICITY"),
+    domain = c("AREA", "AREA", "ETHNICITY"),
     subdomain = c("ADM0", "ADM1", "ETHNICITY"),
     description = c("Administrative district", "Administrative district", "Ethnicity category"),
     stringsAsFactors = FALSE
