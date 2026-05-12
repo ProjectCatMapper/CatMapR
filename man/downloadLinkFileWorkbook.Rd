@@ -30,7 +30,7 @@ Invisibly returns a list with \code{path}, \code{status}, and \code{sheets}.
 }
 \description{
 For merging templates without variable mappings, writes long and wide link
-file sheets derived from the template's equivalence ties.
+file sheets derived from the template's category merging ties.
 }
 \examples{
 \dontrun{

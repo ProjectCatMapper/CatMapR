@@ -31,7 +31,7 @@ get_merge_template <- function(database, dataset_id, url = NULL) {
 #' Fetch the summary payload used by the CatMapperJS \emph{Merging Template} tab
 #' on node pages for \code{MERGING} and \code{STACK} nodes. The response
 #' includes summary tables plus downloadable \code{mergingTies} and
-#' \code{equivalenceTies} arrays.
+#' \code{categoryMergingTies} arrays.
 #'
 #' @param database Target database, typically \code{"SocioMap"} or
 #'   \code{"ArchaMap"}.
@@ -41,7 +41,7 @@ get_merge_template <- function(database, dataset_id, url = NULL) {
 #'
 #' @return Parsed API response, typically a list with fields such as
 #'   \code{nodeType}, \code{stackSummary}, \code{datasetSummary},
-#'   \code{mergingTies}, and \code{equivalenceTies}.
+#'   \code{mergingTies}, and \code{categoryMergingTies}.
 #' @export
 #'
 #' @examples

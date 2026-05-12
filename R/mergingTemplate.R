@@ -44,7 +44,7 @@ getMergingTemplate <- function(cmid, database = "SocioMap", url = NULL) {
 #'   otherwise `"https://api.catmapper.org"`.
 #'
 #' @return A list with normalized `stackSummary`, `datasetSummary`,
-#'   `mergingTies`, and `equivalenceTies` data frames plus scalar summary
+#'   `mergingTies`, and `categoryMergingTies` data frames plus scalar summary
 #'   fields returned by the API.
 #'
 #' @export
@@ -144,7 +144,7 @@ downloadMergingTemplateWorkbook <- function(cmid,
 #' Download a Link-File Workbook
 #'
 #' For merging templates without variable mappings, writes long and wide link
-#' file sheets derived from the template's equivalence ties.
+#' file sheets derived from the template's category merging ties.
 #'
 #' @param cmid A MERGING CMID.
 #' @param database A string specifying the database from which to retrieve the
@@ -188,12 +188,12 @@ downloadLinkFileWorkbook <- function(cmid,
     )
   }
   if (!isTRUE(result$status$canDownloadLinkFile)) {
-    stop(sprintf("Merging template \"%s\" has no equivalence ties to build a link file.", cmid), call. = FALSE)
+    stop(sprintf("Merging template \"%s\" has no category merging ties to build a link file.", cmid), call. = FALSE)
   }
 
   sheets <- build_link_file_sheets(
     template_rows = result$template,
-    equivalence_ties = result$summary$equivalenceTies
+    category_merging_ties = result$summary$categoryMergingTies
   )
   path <- normalize_workbook_path(path %||% file.path(getwd(), paste0("link_file_", cmid, ".xlsx")))
   assert_writable_output_path(path, overwrite = overwrite)
@@ -352,15 +352,15 @@ normalize_merging_template_summary_response <- function(response) {
     nodeType = if (!is.null(response$nodeType)) as.character(response$nodeType[[1]]) else NA_character_,
     stackSummary = normalize_section_df(
       response$stackSummary,
-      c("stackID", "stackCMName", "datasetCount", "equivalenceTieCount", "keyReassignmentCount", "variableCount")
+      c("stackID", "stackCMName", "datasetCount", "categoryMergingTieCount", "keyReassignmentCount", "variableCount")
     ),
     stackSummaryTotals = normalize_named_list(
       response$stackSummaryTotals,
-      c("datasetCount", "equivalenceTieCount", "keyReassignmentCount", "variableCount")
+      c("datasetCount", "categoryMergingTieCount", "keyReassignmentCount", "variableCount")
     ),
     datasetSummary = normalize_section_df(
       response$datasetSummary,
-      c("datasetID", "datasetCMName", "equivalenceTieCount", "keyReassignmentCount", "variableCount")
+      c("datasetID", "datasetCMName", "categoryMergingTieCount", "keyReassignmentCount", "variableCount")
     ),
     mergingTemplateCount = if (!is.null(response$mergingTemplateCount)) response$mergingTemplateCount[[1]] else 0,
     mergingTies = normalize_section_df(
@@ -384,9 +384,9 @@ normalize_merging_template_summary_response <- function(response) {
         "summaryWeight"
       )
     ),
-    equivalenceTies = normalize_section_df(
-      response$equivalenceTies,
-      c("stackID", "datasetID", "Key", "originalCMID", "originalCMName", "equivalentCMID", "equivalentCMName", "selfReference")
+    categoryMergingTies = normalize_section_df(
+      response$categoryMergingTies,
+      c("stackID", "datasetID", "Key", "categoryCMID", "categoryCMName")
     )
   )
 }
@@ -460,8 +460,8 @@ summarize_merging_template_status <- function(summary) {
     variable_count <- 0
   }
 
-  equivalence_tie_count <- if (is.data.frame(summary$equivalenceTies)) {
-    nrow(summary$equivalenceTies)
+  category_merging_tie_count <- if (is.data.frame(summary$categoryMergingTies)) {
+    nrow(summary$categoryMergingTies)
   } else {
     0
   }
@@ -470,9 +470,9 @@ summarize_merging_template_status <- function(summary) {
     nodeType = node_type,
     isMergingTemplate = identical(node_type, "MERGING"),
     hasVariableMappings = variable_count > 0,
-    canDownloadLinkFile = identical(node_type, "MERGING") && equivalence_tie_count > 0,
+    canDownloadLinkFile = identical(node_type, "MERGING") && category_merging_tie_count > 0,
     variableCount = variable_count,
-    equivalenceTieCount = equivalence_tie_count
+    categoryMergingTieCount = category_merging_tie_count
   )
 }
 
@@ -548,19 +548,19 @@ parse_key_expression <- function(key) {
   out
 }
 
-build_link_file_sheets <- function(template_rows, equivalence_ties) {
+build_link_file_sheets <- function(template_rows, category_merging_ties) {
   if (!is.data.frame(template_rows)) {
     template_rows <- as.data.frame(template_rows, stringsAsFactors = FALSE, check.names = FALSE)
   }
-  if (!is.data.frame(equivalence_ties)) {
-    equivalence_ties <- as.data.frame(equivalence_ties, stringsAsFactors = FALSE, check.names = FALSE)
+  if (!is.data.frame(category_merging_ties)) {
+    category_merging_ties <- as.data.frame(category_merging_ties, stringsAsFactors = FALSE, check.names = FALSE)
   }
 
-  dataset_lookup <- template_rows[template_rows$datasetID %in% equivalence_ties$datasetID, , drop = FALSE]
+  dataset_lookup <- template_rows[template_rows$datasetID %in% category_merging_ties$datasetID, , drop = FALSE]
   dataset_lookup <- unique(dataset_lookup[, intersect(c("datasetID", "datasetName"), names(dataset_lookup)), drop = FALSE])
 
-  long_rows <- lapply(seq_len(nrow(equivalence_ties)), function(i) {
-    row <- equivalence_ties[i, , drop = FALSE]
+  long_rows <- lapply(seq_len(nrow(category_merging_ties)), function(i) {
+    row <- category_merging_ties[i, , drop = FALSE]
     dataset_id <- as.character(row$datasetID[[1]] %||% "")
     dataset_name <- ""
     if (nrow(dataset_lookup) > 0 && "datasetID" %in% names(dataset_lookup)) {
@@ -576,10 +576,10 @@ build_link_file_sheets <- function(template_rows, equivalence_ties) {
         stackID = row$stackID[[1]] %||% "",
         datasetID = dataset_id,
         datasetName = dataset_name,
-        CMID = row$equivalentCMID[[1]] %||% row$originalCMID[[1]] %||% "",
-        CMName = row$equivalentCMName[[1]] %||% row$originalCMName[[1]] %||% "",
-        originalCMID = row$originalCMID[[1]] %||% "",
-        originalCMName = row$originalCMName[[1]] %||% "",
+        CMID = row$categoryCMID[[1]] %||% "",
+        CMName = row$categoryCMName[[1]] %||% "",
+        categoryCMID = row$categoryCMID[[1]] %||% "",
+        categoryCMName = row$categoryCMName[[1]] %||% "",
         Key = row$Key[[1]] %||% ""
       ),
       parsed
@@ -593,14 +593,14 @@ build_link_file_sheets <- function(template_rows, equivalence_ties) {
       datasetName = character(),
       CMID = character(),
       CMName = character(),
-      originalCMID = character(),
-      originalCMName = character(),
+      categoryCMID = character(),
+      categoryCMName = character(),
       Key = character(),
       stringsAsFactors = FALSE
     )
   } else {
     normalize_section_df(long_rows, required_cols = c(
-      "stackID", "datasetID", "datasetName", "CMID", "CMName", "originalCMID", "originalCMName", "Key"
+      "stackID", "datasetID", "datasetName", "CMID", "CMName", "categoryCMID", "categoryCMName", "Key"
     ))
   }
 

@@ -18,13 +18,13 @@ when set.}
 \value{
 Parsed API response, typically a list with fields such as
 \code{nodeType}, \code{stackSummary}, \code{datasetSummary},
-\code{mergingTies}, and \code{equivalenceTies}.
+\code{mergingTies}, and \code{categoryMergingTies}.
 }
 \description{
 Fetch the summary payload used by the CatMapperJS \emph{Merging Template} tab
 on node pages for \code{MERGING} and \code{STACK} nodes. The response
 includes summary tables plus downloadable \code{mergingTies} and
-\code{equivalenceTies} arrays.
+\code{categoryMergingTies} arrays.
 }
 \examples{
 \dontrun{

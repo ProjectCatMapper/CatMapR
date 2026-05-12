@@ -17,13 +17,13 @@ otherwise \code{"https://api.catmapper.org"}.}
 }
 \value{
 A list with normalized \code{stackSummary}, \code{datasetSummary},
-\code{mergingTies}, and \code{equivalenceTies} data frames plus scalar summary
+\code{mergingTies}, and \code{categoryMergingTies} data frames plus scalar summary
 fields returned by the API.
 }
 \description{
 This function retrieves a structured summary for a MERGING or STACK node,
-including stack summaries, dataset summaries, merge ties, and equivalence
-ties.
+including stack summaries, dataset summaries, merge ties, and category
+merging ties.
 }
 \examples{
 \dontrun{

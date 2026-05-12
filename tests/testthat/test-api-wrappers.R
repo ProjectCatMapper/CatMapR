@@ -447,19 +447,19 @@ test_that("prepare_upload_rows accepts merging_replace variable ties with stackI
   expect_identical(prepared$action, "merging_replace")
 })
 
-test_that("prepare_upload_rows accepts add_merging equivalence uploads with Key_ columns", {
+test_that("prepare_upload_rows accepts add_merging category merging uploads", {
   prepared <- CatMapR::prepare_upload_rows(
     df = data.frame(
-      mergingID = "AMM1",
+      stackID = "AS1",
+      datasetID = "AD1",
       categoryID = "AM1",
-      Key_AD1 = "Type == Plain",
-      Key_AD2 = "Type == Decorated",
+      Key = "Type == Plain",
       stringsAsFactors = FALSE
     ),
     database = "ArchaMap",
     form_data = list(),
     action = "add_merging",
-    merging_type = "equivalence_ties"
+    merging_type = "merging_ties_to_categories"
   )
 
   expect_type(prepared, "list")
@@ -568,14 +568,14 @@ test_that("getMergingTemplateSummary calls canonical summary endpoint and preser
             stackID = "AS1",
             stackCMName = "Stack 1",
             datasetCount = 2,
-            equivalenceTieCount = 8,
+            categoryMergingTieCount = 8,
             keyReassignmentCount = 1,
             variableCount = 3
           )
         ),
         stackSummaryTotals = list(
           datasetCount = 2,
-          equivalenceTieCount = 8,
+          categoryMergingTieCount = 8,
           keyReassignmentCount = 1,
           variableCount = 3
         ),
@@ -601,16 +601,13 @@ test_that("getMergingTemplateSummary calls canonical summary endpoint and preser
             summaryWeight = NA_character_
           )
         ),
-        equivalenceTies = list(
+        categoryMergingTies = list(
           list(
             stackID = "AS1",
             datasetID = "AD354273",
             Key = "type == adobe",
-            originalCMID = "AM1",
-            originalCMName = "Adobe",
-            equivalentCMID = "AM2",
-            equivalentCMName = "Adobe brick",
-            selfReference = FALSE
+            categoryCMID = "AM2",
+            categoryCMName = "Adobe brick"
           )
         )
       )

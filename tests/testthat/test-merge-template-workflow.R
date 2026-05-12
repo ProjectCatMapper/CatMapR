@@ -17,19 +17,16 @@ test_that("findMergingTemplate combines template rows and summary status", {
       list(
         nodeType = "MERGING",
         stackSummary = data.frame(),
-        stackSummaryTotals = list(datasetCount = 1, equivalenceTieCount = 3, keyReassignmentCount = 0, variableCount = 2),
+        stackSummaryTotals = list(datasetCount = 1, categoryMergingTieCount = 3, keyReassignmentCount = 1, variableCount = 2),
         datasetSummary = data.frame(),
         mergingTemplateCount = 0,
         mergingTies = data.frame(),
-        equivalenceTies = data.frame(
+        categoryMergingTies = data.frame(
           stackID = "AD958",
           datasetID = "AD354274",
           Key = "Site == AM1142",
-          originalCMID = "AM1142",
-          originalCMName = "Shared Site",
-          equivalentCMID = "AM1142",
-          equivalentCMName = "Shared Site",
-          selfReference = TRUE,
+          categoryCMID = "AM1142",
+          categoryCMName = "Shared Site",
           stringsAsFactors = FALSE
         )
       )
@@ -101,15 +98,12 @@ test_that("downloadLinkFileWorkbook writes long and wide link-file sheets", {
           stringsAsFactors = FALSE
         ),
         summary = list(
-          equivalenceTies = data.frame(
+          categoryMergingTies = data.frame(
             stackID = c("AD958", "AD959"),
             datasetID = c("AD354274", "AD354275"),
             Key = c("Site == AM1142", "Site == AM1142 && Field == Depth"),
-            originalCMID = c("AM1142", "AM1142"),
-            originalCMName = c("Shared Site", "Shared Site"),
-            equivalentCMID = c("AM1142", "AM1142"),
-            equivalentCMName = c("Shared Site", "Shared Site"),
-            selfReference = c(TRUE, TRUE),
+            categoryCMID = c("AM1142", "AM1142"),
+            categoryCMName = c("Shared Site", "Shared Site"),
             stringsAsFactors = FALSE
           )
         )

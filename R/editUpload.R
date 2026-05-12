@@ -414,21 +414,19 @@ validate_form_data <- function(form_data,
 }
 
 infer_merging_required_columns <- function(row_cols, action, merging_type = "0") {
-  key_columns <- grep("^Key_", row_cols, value = TRUE)
   has_variable <- "variableID" %in% row_cols
-  has_equivalence <- all(c("categoryID1", "categoryID2") %in% row_cols)
-  has_equivalence_add <- "categoryID" %in% row_cols
+  has_category_merging_add <- "categoryID" %in% row_cols
   uses_dataset_transform <- "datasetTransform" %in% row_cols
 
   if (action == "add_merging") {
     if (identical(merging_type, "merging_ties_to_variables") || has_variable) {
       return(c("mergingID", "datasetID", "variableID", "varName"))
     }
-    if (identical(merging_type, "equivalence_ties") || has_equivalence_add) {
-      if (length(key_columns) == 2) {
-        return(c("mergingID", "categoryID", key_columns))
-      }
-      return(c("mergingID", "categoryID", "Key", "datasetID"))
+    if (identical(merging_type, "equivalence_ties")) {
+      stop("`equivalence_ties` is no longer supported. Use `merging_ties_to_categories`.", call. = FALSE)
+    }
+    if (identical(merging_type, "merging_ties_to_categories") || has_category_merging_add) {
+      return(c("datasetID", "categoryID", "Key"))
     }
     return(c("mergingID", "datasetID"))
   }
@@ -441,8 +439,8 @@ infer_merging_required_columns <- function(row_cols, action, merging_type = "0")
       }
       return(required)
     }
-    if (identical(merging_type, "equivalence_ties") || has_equivalence) {
-      return(c("categoryID1", "categoryID2", "Key", "datasetID", "stackID"))
+    if (identical(merging_type, "equivalence_ties")) {
+      stop("`equivalence_ties` is no longer supported. Use `merging_ties_to_categories`.", call. = FALSE)
     }
     stop(
       sprintf(

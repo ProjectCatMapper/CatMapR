@@ -2,7 +2,7 @@
 
 Fetch the summary payload used by the CatMapperJS *Merging Template* tab
 on node pages for `MERGING` and `STACK` nodes. The response includes
-summary tables plus downloadable `mergingTies` and `equivalenceTies`
+summary tables plus downloadable `mergingTies` and `categoryMergingTies`
 arrays.
 
 ## Usage
@@ -28,7 +28,7 @@ getMergingTemplateSummary(database, cmid, url = NULL)
 ## Value
 
 Parsed API response, typically a list with fields such as `nodeType`,
-`stackSummary`, `datasetSummary`, `mergingTies`, and `equivalenceTies`.
+`stackSummary`, `datasetSummary`, `mergingTies`, and `categoryMergingTies`.
 
 ## Examples
 
