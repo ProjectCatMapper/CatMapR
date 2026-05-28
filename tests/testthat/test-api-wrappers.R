@@ -714,6 +714,8 @@ test_that("uploadInputNodes simple mode warns and strips preformatted key expres
 
   expect_equal(result, list(ok = TRUE))
   expect_identical(captured$parameters$df[[1]]$Key, "yoruba")
+  expect_false("allContext" %in% names(captured$parameters))
+  expect_true("optionalProperties" %in% names(captured$parameters))
 })
 
 test_that("uploadInputNodes simple mode rejects compound key expressions", {

@@ -743,7 +743,7 @@ uploadInputNodes <- function(df,
     so = so,
     ao = ao,
     addoptions = normalize_addoptions(addoptions),
-    allContext = allContext,
+    optionalProperties = allContext,
     mergingType = mergingType
   )
 
