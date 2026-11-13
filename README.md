@@ -1,4 +1,4 @@
-![R-CMD-check](https://github.com/ProjectCatMapper/CatMapR/actions/workflows/R-CMD-check.yaml/badge.svg)
+[![Package checks](https://github.com/ProjectCatMapper/CatMapR/actions/workflows/package-version.yml/badge.svg?branch=master)](https://github.com/ProjectCatMapper/CatMapR/actions/workflows/package-version.yml)
 
 # CatMapR
 

@@ -41,6 +41,11 @@ commit containing the changelog and final metadata.
 
 ## Verification and recovery
 
+The README and website status badge follows the `Package version` workflow,
+which includes versioning, all platform checks, and documentation deployment.
+`R-CMD-check.yaml` is called as a reusable workflow; its standalone badge can
+retain an older failed run even after the full package pipeline passes.
+
 The workflow summary identifies the allocated version, tag, and commit. The tag
 must resolve to that commit and its package metadata must contain the same
 version. If a run fails, fix the reported issue or rerun it. Successful version
