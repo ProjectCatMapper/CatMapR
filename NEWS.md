@@ -1,3 +1,10 @@
+# CatMapR 0.1.20
+
+- Make concurrent version tests independent of runner timing
+- Automate package versions and normalize Windows test paths
+
+Automatic version update for source commit `57032ad68d6aa8526b8cb1fbd170302e357bf0c5`.
+
 # CatMapR 0.1.19 (2026-11-13)
 
 - Added `preflight_polygon_upload()`, `apply_polygon_upload()`, and
