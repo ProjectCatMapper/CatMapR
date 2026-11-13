@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+__pycache__/
 CatMapR.Rcheck/
 .tmp-lib/
 CatMapR_*.tar.gz

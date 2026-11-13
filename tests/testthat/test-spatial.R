@@ -48,7 +48,8 @@ test_that("polygon preflight sends a file using multipart without a JSON content
   expect_identical(captured$args$body$database, "archamap")
   expect_identical(captured$args$body$replaceExisting, "false")
   expect_s3_class(captured$args$body$file, "form_file")
-  expect_identical(captured$args$body$file$path, normalizePath(path, winslash = "/"))
+  expect_identical(normalizePath(captured$args$body$file$path, winslash = "/"),
+                   normalizePath(path, winslash = "/"))
   unnamed <- captured$args[names(captured$args) == ""]
   headers <- unlist(lapply(unnamed, function(x) x$headers))
   expect_identical(unname(headers["X-API-Key"]), "test-key")

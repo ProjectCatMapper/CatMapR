@@ -12,3 +12,4 @@
 ^pkgdown$
 ^cran-comments\.md$
 ^vignettes/.*\.(html|pdf)$
+^RELEASING\.md$

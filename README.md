@@ -422,3 +422,9 @@ See [safe upload patterns](vignettes/safe-upload-patterns.Rmd) for the file
 contract and a complete preflight/apply/poll example, and [release notes](NEWS.md).
 HTTP and failed-task errors inherit from `catmapr_api_error` and retain
 `error_details`, `response`, `status_code`, and `task_id` diagnostics.
+
+### Automatic versions
+
+Each default-branch push automatically updates the package version, changelog,
+and matching Git tag. Reruns reuse the existing version. See
+[the versioning process](RELEASING.md) for details and recovery instructions.

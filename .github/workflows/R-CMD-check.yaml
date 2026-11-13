@@ -1,10 +1,23 @@
 name: R-CMD-check
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_call:
+    inputs:
+      revision:
+        description: Exact version commit to check
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Commit or tag to check (defaults to selected branch)
+        required: false
+        type: string
+
+permissions:
+  contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -23,6 +36,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.revision || github.sha }}
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2

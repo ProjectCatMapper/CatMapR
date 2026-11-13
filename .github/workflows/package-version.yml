@@ -1,0 +1,73 @@
+name: Package version
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-versioning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test version allocation, retries, and atomic pushes
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m unittest discover -s .github/tests -v
+
+  version:
+    needs: test-versioning
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      commit: ${{ steps.bump.outputs.commit }}
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Commit package version and push matching tag atomically
+        id: bump
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          SOURCE_COMMIT: ${{ github.sha }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python .github/scripts/version_package.py --branch "$DEFAULT_BRANCH" --source "$SOURCE_COMMIT"
+      - name: Record version identity
+        env:
+          PACKAGE_VERSION: ${{ steps.bump.outputs.version }}
+          PACKAGE_TAG: ${{ steps.bump.outputs.tag }}
+          PACKAGE_COMMIT: ${{ steps.bump.outputs.commit }}
+        run: |
+          printf 'Package version: `%s`\n\nTag: `%s`\n\nCommit: `%s`\n' "$PACKAGE_VERSION" "$PACKAGE_TAG" "$PACKAGE_COMMIT" >> "$GITHUB_STEP_SUMMARY"
+
+  check:
+    needs: version
+    uses: ./.github/workflows/R-CMD-check.yaml
+    with:
+      revision: ${{ needs.version.outputs.commit }}
+
+  docs:
+    needs: [version, check]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pkgdown.yaml
+    with:
+      revision: ${{ needs.version.outputs.commit }}
