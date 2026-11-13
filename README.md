@@ -411,3 +411,14 @@ CatMapR relies on the following R packages:
 ## License
 
 CatMapR is licensed under the GNU General Public License (GPL).
+
+### Polygon uploads, geometry, and contextual policy
+
+Version 0.1.19 adds explicit polygon preflight/apply/discard functions,
+`cancel_upload_task()`, `get_geometry()`, `explore_geometry()`,
+`get_contextual_policy()`, and `validate_contextual_rows()`. Polygon uploads
+require administrator credentials and existing USES ties; replacement is opt-in.
+See [safe upload patterns](vignettes/safe-upload-patterns.Rmd) for the file
+contract and a complete preflight/apply/poll example, and [release notes](NEWS.md).
+HTTP and failed-task errors inherit from `catmapr_api_error` and retain
+`error_details`, `response`, `status_code`, and `task_id` diagnostics.

@@ -1,3 +1,25 @@
+# CatMapR 0.1.19 (2026-11-13)
+
+- Added `preflight_polygon_upload()`, `apply_polygon_upload()`, and
+  `discard_polygon_upload()` for the administrator GeoJSON upload workflow.
+  Preflight validates the entire file without graph writes; applying is an
+  explicit separate step, and replacement defaults to disabled.
+- Added `cancel_upload_task()` for polygon and tabular tasks. Existing task
+  status and waiting helpers also support polygon uploads.
+- Added `get_geometry()` and `explore_geometry()` for direct geometry and map
+  payloads, preserving server source and truncation information.
+- Added `get_contextual_policy()` and `validate_contextual_rows()` for current
+  policy discovery and read-only validation of up to 1,000 proposed rows.
+- API and failed-task errors now raise `catmapr_api_error` conditions retaining
+  `error_details`, `response`, `status_code` (for HTTP failures), and `task_id`
+  (for task failures). Previously, error handling kept only the main message,
+  hiding actionable feature/field diagnostics.
+- Extended the internal HTTP helper with multipart POST and DELETE support;
+  JSON-only transport previously prevented use of the polygon endpoints.
+- Added workflow examples, API contract documentation, and mocked request tests.
+- Aligned the package version with the next release after GitHub tag v0.1.18.
+  Existing public function signatures remain compatible.
+
 # CatMapR 0.1.15 (2026-05-07)
 
 - Renamed exported functions to a clearer snake_case user API:

@@ -54,6 +54,16 @@ reference:
       - get_domains
       - get_upload_properties
       - get_properties
+      - get_contextual_policy
+      - validate_contextual_rows
+  - title: Geometry and polygon uploads
+    contents:
+      - get_geometry
+      - explore_geometry
+      - preflight_polygon_upload
+      - apply_polygon_upload
+      - discard_polygon_upload
+      - cancel_upload_task
 
 articles:
   - title: Vignettes

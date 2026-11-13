@@ -248,9 +248,9 @@ wait_for_upload_task <- function(task_id,
     }
     if (state %in% c("failed", "canceled")) {
       err <- as.character(status$error %||% status$message %||% "Upload task did not complete successfully.")
-      stop(
+      stop_catmapr_error(
         sprintf("Upload task `%s` ended with status `%s`: %s", task_id, state, err),
-        call. = FALSE
+        response = status, task_id = task_id
       )
     }
     elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
@@ -887,10 +887,10 @@ waitForUploadTask <- function(task_id,
     task_status <- tolower(as.character(status$status %||% ""))
     if (task_status %in% c("completed", "failed", "canceled")) {
       if (identical(task_status, "failed")) {
-        stop(status$error %||% "Upload task failed.", call. = FALSE)
+        stop_catmapr_error(status$error %||% status$message %||% "Upload task failed.", response = status, task_id = task_id)
       }
       if (identical(task_status, "canceled")) {
-        stop(status$message %||% "Upload task was canceled.", call. = FALSE)
+        stop_catmapr_error(status$message %||% "Upload task was canceled.", response = status, task_id = task_id)
       }
       return(status)
     }

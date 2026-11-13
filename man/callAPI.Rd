@@ -10,7 +10,8 @@ callAPI(
   request = "GET",
   url = NULL,
   type = "default",
-  headers = NULL
+  headers = NULL,
+  encode = "json"
 )
 }
 \arguments{
@@ -18,13 +19,16 @@ callAPI(
 
 \item{parameters}{API parameters}
 
-\item{request}{GET or POST}
+\item{request}{GET, POST or DELETE}
 
 \item{url}{API URL override. If \code{NULL}, \code{CATMAPR_API_URL} is used when set, otherwise \code{"https://api.catmapper.org"}.}
 
 \item{type}{default or stream}
 
 \item{headers}{Optional named list of request headers, for example \code{list("X-API-Key" = "cmk_...")}.}
+
+\item{encode}{Body encoding: json or multipart. Multipart bodies can include
+files created by \code{httr::upload_file()}.}
 }
 \value{
 API response
