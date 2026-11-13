@@ -220,7 +220,7 @@ class VersionAutomationTests(unittest.TestCase):
         self.assertEqual(result["commit"], self.remote_tip())
         self.assertEqual(git_at(self.remote, "tag", "--list").splitlines(), ["v0.1.19", "v0.1.20"])
 
-    def test_concurrent_rerun_of_same_event_creates_only_one_version(self):
+    def race_same_event(self, distinct_commits):
         source = self.seed()
         racer = self.root / "racer"
         git_at(self.root, "clone", str(self.remote), str(racer))
@@ -232,14 +232,32 @@ class VersionAutomationTests(unittest.TestCase):
             if args[0] == "push" and not raced:
                 raced = True
                 env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+                if distinct_commits:
+                    # Git stores timestamps at one-second resolution. Force
+                    # distinct objects rather than depending on runner speed.
+                    env.update(GIT_AUTHOR_DATE="2000-01-01T00:00:00+00:00",
+                               GIT_COMMITTER_DATE="2000-01-01T00:00:00+00:00")
                 subprocess.run(["python", str(SCRIPT), "--branch", "main", "--source", source],
                                cwd=racer, env=env, check=True, capture_output=True, text=True)
             return real_git(*args, **kwargs)
 
         with patch.object(release, "git", side_effect=race_push), patch.object(release.time, "sleep"):
             result = self.bump(source)
-        self.assertEqual(result["changed"], "false")
+        self.assertEqual(result["commit"], self.remote_tip())
         self.assertEqual(git_at(self.remote, "tag", "--list").splitlines(), ["v0.1.19", "v0.1.20"])
+        return result
+
+    def test_concurrent_rerun_of_same_event_creates_only_one_version(self):
+        with patch.dict(os.environ, GIT_AUTHOR_DATE="2001-01-01T00:00:00+00:00",
+                        GIT_COMMITTER_DATE="2001-01-01T00:00:00+00:00"):
+            result = self.race_same_event(distinct_commits=True)
+        self.assertEqual(result["changed"], "false")
+
+    def test_identical_competing_commits_are_a_successful_noop_push(self):
+        with patch.dict(os.environ, GIT_AUTHOR_DATE="2000-01-01T00:00:00+00:00",
+                        GIT_COMMITTER_DATE="2000-01-01T00:00:00+00:00"):
+            result = self.race_same_event(distinct_commits=False)
+        self.assertEqual(result["changed"], "true")
 
 
 if __name__ == "__main__":
