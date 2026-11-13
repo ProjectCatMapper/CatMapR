@@ -1,7 +1,7 @@
 Package: CatMapR
 Type: Package
 Title: Interface to the CatMapper API
-Version: 0.1.20
+Version: 0.1.21
 Author: Robert J. Bischoff
 Maintainer: Robert J. Bischoff <bischrob@gmail.com>
 Depends:

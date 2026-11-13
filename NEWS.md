@@ -1,3 +1,9 @@
+# CatMapR 0.1.21
+
+- Report CatMapR status from the complete package pipeline
+
+Automatic version update for source commit `4c2faf9a32ea0e6bb89d86bacaa700c71f7fd535`.
+
 # CatMapR 0.1.20
 
 - Make concurrent version tests independent of runner timing
